@@ -27,10 +27,10 @@
     </div>
   </div>
   <div class="hud-right">
-    <div class="stat-pill"><span class="ic ic-stone">◇</span><b id="hud-stone">100</b><em>灵石</em></div>
-    <div class="stat-pill"><span class="ic ic-pill">丹</span><b id="hud-pill">3</b><em>丹药</em></div>
-    <div class="stat-pill"><span class="ic ic-disc">徒</span><b id="hud-disc">3</b><em>弟子</em></div>
-    <div class="stat-pill rep"><span class="ic">名</span><b id="hud-rep">无名小派</b></div>
+    <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_stone.png)"></i><b id="hud-stone">100</b><em>灵石</em></div>
+    <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_pill.png)"></i><b id="hud-pill">3</b><em>丹药</em></div>
+    <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_disciple.png)"></i><b id="hud-disc">3</b><em>弟子</em></div>
+    <div class="stat-pill rep"><i class="ic-img" style="background-image:url(assets/icons/ic_sword.png)"></i><b id="hud-rep">无名小派</b></div>
     <button class="icon-btn" data-act="open-settings" title="设置">⚙</button>
   </div>
 </header>
@@ -89,12 +89,12 @@
 
   <!-- 行动菜单 -->
   <nav class="action-bar">
-    <button class="ab-btn" data-act="dispatch"><span class="ab-i">遣</span><span class="ab-l">派 遣</span></button>
-    <button class="ab-btn" data-act="cultivate"><span class="ab-i">修</span><span class="ab-l">闭 关</span></button>
-    <button class="ab-btn" data-act="build"><span class="ab-i">筑</span><span class="ab-l">修 缮</span></button>
-    <button class="ab-btn" data-act="story"><span class="ab-i">史</span><span class="ab-l">主 线</span></button>
-    <button class="ab-btn" data-act="codex"><span class="ab-i">录</span><span class="ab-l">名 录</span></button>
-    <button class="ab-btn primary" data-act="next-day"><span class="ab-i">入</span><span class="ab-l">入 定</span></button>
+    <button class="ab-btn" data-act="dispatch" data-tut="dispatch"><span class="ab-i with-icon"><i class="ic-large" style="background-image:url(assets/icons/ic_dispatch.png)"></i></span><span class="ab-l">派 遣</span></button>
+    <button class="ab-btn" data-act="cultivate" data-tut="cultivate"><span class="ab-i with-icon"><i class="ic-large" style="background-image:url(assets/icons/ic_breakthru.png)"></i></span><span class="ab-l">闭 关</span></button>
+    <button class="ab-btn" data-act="build" data-tut="build"><span class="ab-i">筑</span><span class="ab-l">修 缮</span></button>
+    <button class="ab-btn" data-act="story" data-tut="story"><span class="ab-i with-icon"><i class="ic-large" style="background-image:url(assets/icons/ic_scroll.png)"></i></span><span class="ab-l">主 线</span></button>
+    <button class="ab-btn" data-act="codex" data-tut="codex"><span class="ab-i with-icon"><i class="ic-large" style="background-image:url(assets/icons/ic_disciple.png)"></i></span><span class="ab-l">名 录</span></button>
+    <button class="ab-btn primary" data-act="next-day" data-tut="next-day"><span class="ab-i with-icon"><i class="ic-large" style="background-image:url(assets/icons/ic_bond.png)"></i></span><span class="ab-l">入 定</span></button>
   </nav>
 </section>
 
@@ -188,6 +188,7 @@
 <script src="js/data.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/save.js"></script>
+<script src="js/tutorial.js"></script>
 <script src="js/disciples.js"></script>
 <script src="js/dispatch.js"></script>
 <script src="js/build.js"></script>

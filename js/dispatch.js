@@ -98,6 +98,9 @@ const Dispatch = (() => {
       Modal.close();
       toast(`${team.map(d=>d.name).join(" · ")} 启程`, "good");
       SFX.play("chime");
+      G.state.flags = G.state.flags || {};
+      G.state.flags.tut_dispatched = true;
+      G.state.flags.investigated_yard = true; // 任意派遣均算「曾遣弟子查访」
       Save.persist();
       Main.updateHUD();
       Disciples.renderHall();

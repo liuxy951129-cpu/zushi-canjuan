@@ -122,14 +122,25 @@ const Story = (() => {
       document.getElementById("im-next").style.display = "none";
       const cont = document.getElementById("im-choices");
       cont.innerHTML = "";
-      // 调查式分支由阶段 2 实现；阶段 1 仍走原 choices 但加上"沉浸"包装
+      // 调查式分支：检查 requireFlag
       node.choices.forEach(c => {
         const btn = document.createElement("button");
         btn.className = "im-choice";
-        btn.innerHTML = `<b>${c.label}</b><span>${c.b||""}</span>${c.requirePill?`<div class="hint">需 ${c.requirePill} 丹药</div>`:""}`;
-        if(c.requirePill && (G.state.pill||0) < c.requirePill) btn.classList.add("disabled");
+        // 检查锁定条件
+        let locked = false, lockMsg = "";
+        if(c.requireFlag){
+          if(c.requireFlag === "strong_team"){
+            const hasJiandan = G.state.disciples.some(d => !d.flags?.dead && d.realm >= 1);
+            if(!hasJiandan){ locked = true; lockMsg = c.lockHint || "未达成条件"; }
+          } else if(!G.state.flags?.[c.requireFlag]){
+            locked = true; lockMsg = c.lockHint || "未达成条件";
+          }
+        }
+        if(c.requirePill && (G.state.pill||0) < c.requirePill){ locked = true; lockMsg = `需 ${c.requirePill} 丹药`; }
+        btn.innerHTML = `<b>${c.label}</b><span>${c.b||""}</span>${locked?`<div class="hint" style="color:var(--vermilion-2)">⌑ ${lockMsg}</div>`:""}`;
+        if(locked) btn.classList.add("disabled");
         btn.onclick = () => {
-          if(c.requirePill && (G.state.pill||0) < c.requirePill){ toast("丹药不足", "bad"); return; }
+          if(locked){ toast(lockMsg, "bad"); return; }
           applyChoice(c.r||{});
           G.state.storyDone.push(node.id);
           Save.persist();

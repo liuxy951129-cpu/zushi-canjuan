@@ -91,10 +91,17 @@ const Main = (() => {
     Disciples.renderHall();
     updateHUD();
     updateAltar();
+    // 跳过 D1 自动剧情，先让祖师爷带新手引导
     setTimeout(() => {
-      Dialog.show("d_master", "祖师", "「你来了。残墟门第十七代——但愿，不是最后一代。」");
-    }, 600);
-    setTimeout(() => Story.tryAdvance(), 2200);
+      Tutorial.start();
+    }, 700);
+    // 引导完成后再触发剧情
+    const interval = setInterval(() => {
+      if(G.state?.flags?.tut_done){
+        clearInterval(interval);
+        setTimeout(() => Story.tryAdvance(), 800);
+      }
+    }, 1000);
   }
 
   function continueGame(){

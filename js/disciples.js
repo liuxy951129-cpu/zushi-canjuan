@@ -33,6 +33,14 @@ const Disciples = (() => {
   function openDetail(did){
     const d = G.state.disciples.find(x => x.id===did);
     if(!d) return;
+    // 调查 flag：看陈渊详情自动开启 c1s2 的「立刻报官」选项
+    if(did === "chenyuan"){
+      G.state.flags = G.state.flags || {};
+      if(!G.state.flags.investigated_jade){
+        G.state.flags.investigated_jade = true;
+        Save.persist();
+      }
+    }
     showScreen("screen-disciple");
     document.getElementById("disc-title").textContent = `${d.name} · ${d.title}`;
     const detail = document.getElementById("disciple-detail");
