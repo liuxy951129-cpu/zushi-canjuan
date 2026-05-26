@@ -24,6 +24,23 @@ const Modal = (() => {
     document.getElementById("modal").classList.add("active");
   }
   function close(){ document.getElementById("modal").classList.remove("active"); }
+  // 全局：点击遮罩（modal-mask 本身，不点到内部 card）即关闭
+  document.addEventListener("click", e => {
+    const m = document.getElementById("modal");
+    if(!m || !m.classList.contains("active")) return;
+    if(e.target === m){ close(); }
+    if(e.target && e.target.id === "modal-close-x"){ close(); }
+  });
+  // Esc 关闭
+  document.addEventListener("keydown", e => {
+    if(e.key === "Escape"){
+      const m = document.getElementById("modal");
+      if(m && m.classList.contains("active")){ close(); }
+      // 沉浸式剧情若处于 quote 阶段也允许 Esc 退出
+      const im = document.getElementById("immersive");
+      if(im && im.classList.contains("active") && Story.closeImmersive){ Story.closeImmersive(); }
+    }
+  });
   return { openHTML, close };
 })();
 
@@ -145,21 +162,23 @@ const Main = (() => {
     const title = document.getElementById("altar-title");
     const quote = document.getElementById("altar-quote");
     if(node){
-      tag.textContent = `第 ${node.chapter} 章`;
+      // 当前发生：可以显示标题（已经知道发生了什么）
+      tag.textContent = "已 历";
       title.textContent = node.title;
       quote.textContent = node.quote || "";
       return;
     }
-    const next = STORIES.find(s => !G.state.storyDone.includes(s.id));
-    if(next){
-      tag.textContent = `第 ${next.chapter} 章 · 待 启`;
-      title.textContent = next.title;
-      quote.textContent = G.state.day >= next.day ? "「点 入 定 推 进 剧 情」" : `第 ${next.day} 日 后 启`;
-    } else {
-      tag.textContent = `残卷已尽`;
-      title.textContent = "尚 未 完 篇";
-      quote.textContent = "「外 传 · 即 将 上 线」";
-    }
+    // 平时：只显示日期与门派状态，不剧透
+    const flavors = [
+      { tag:"残 墟 之 中",     title:"祖 师 堂",         q:"「门外有风。」" },
+      { tag:"夜 ·  烛 火 摇",   title:"祖 师 堂",         q:"「弟子们去歇了。」" },
+      { tag:"晨 · 钟 鼓 未 起", title:"祖 师 堂",         q:"「该派人下山了。」" },
+      { tag:"风 起 林 末",     title:"祖 师 堂",         q:"「江湖上似有事来。」" },
+    ];
+    const f = flavors[ (G.state?.day || 1) % flavors.length ];
+    tag.textContent = f.tag;
+    title.textContent = f.title;
+    quote.textContent = f.q;
   }
 
   function init(){

@@ -195,65 +195,57 @@ const Story = (() => {
     }
   }
 
-  // —— 主线列表（已通过 + 模糊提示 ???）——
+  // —— 主线列表（仅显示已通过的剧情，绝不剧透未来）——
   function renderList(){
     const wrap = document.getElementById("story-wrap");
     wrap.innerHTML = "";
-    STORIES.forEach((s, i) => {
-      const done = G.state.storyDone.includes(s.id);
-      const reachable = G.state.day >= s.day;
-      const card = document.createElement("div");
-      card.className = "story-card" + (!done ? " locked" : "");
+    const done = STORIES.filter(s => G.state.storyDone.includes(s.id));
+    const total = STORIES.length;
 
-      if(done){
-        card.innerHTML = `
-          <div class="story-tag tag-finished">第 ${s.chapter} 章 · 第 ${i+1} 节</div>
-          <h3>${s.title}</h3>
-          <div class="body">${s.body.replace(/\n/g,"<br>")}</div>
-          ${s.quote ? `<div class="quote">${s.quote}</div>` : ""}
-          <div class="story-actions">
-            <span style="color:var(--jade);letter-spacing:.2em">✓ 已 历 经</span>
-            <button class="btn ghost" data-replay="${s.id}">⥁ 重 阅</button>
-          </div>
-        `;
-      } else {
-        // 未触发：???
-        const hint = hintFor(s, reachable);
-        card.innerHTML = `
-          <div class="story-tag" style="background:var(--ink-4)">第 ${s.chapter} 章 · ???</div>
-          <h3 style="font-family:'Ma Shan Zheng';color:var(--ink-3);letter-spacing:.4em">— ？ ？ ？ —</h3>
-          <div class="body" style="color:var(--ink-3);font-style:italic">${hint}</div>
-          <div class="story-actions">
-            <span style="color:var(--ink-3);letter-spacing:.18em;font-size:11px">${reachable?"未 探 寻":"未 至 时 日"}</span>
-          </div>
-        `;
-      }
+    // 卷首：本派编年（不告诉你将来有什么，只告诉你已经走了几页）
+    const head = document.createElement("div");
+    head.className = "story-card";
+    head.innerHTML = `
+      <div class="story-tag" style="background:var(--gold-3)">本 派 编 年</div>
+      <h3>残 卷 · 已 历 ${done.length} / ${total} 页</h3>
+      <div class="body" style="color:var(--ink-2)">这本卷，记的是已经发生的事。\n往后的页码，由你与天数共同写。\n\n卷首未着的字——\n它们不会写在纸上，只会自己来寻你。</div>
+    `;
+    wrap.appendChild(head);
+
+    if(done.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "story-card locked";
+      empty.style.textAlign = "center";
+      empty.innerHTML = `
+        <div class="body" style="font-style:italic;color:var(--ink-3);font-family:'Long Cang',serif;font-size:18px;letter-spacing:.16em;line-height:2">未 着 一 字</div>
+      `;
+      wrap.appendChild(empty);
+      return;
+    }
+
+    done.forEach(s => {
+      const card = document.createElement("div");
+      card.className = "story-card";
+      card.innerHTML = `
+        <div class="story-tag tag-finished">已 历</div>
+        <h3>${s.title}</h3>
+        <div class="body">${s.body.replace(/\n/g,"<br>")}</div>
+        ${s.quote ? `<div class="quote">${s.quote}</div>` : ""}
+        <div class="story-actions">
+          <span style="color:var(--jade);letter-spacing:.2em">✓ 此页已成往事</span>
+          <button class="btn ghost" data-replay="${s.id}">⥁ 重 阅</button>
+        </div>
+      `;
       wrap.appendChild(card);
     });
+
     wrap.querySelectorAll("[data-replay]").forEach(b => b.addEventListener("click", () => {
       const node = STORIES.find(s => s.id === b.dataset.replay);
-      if(node){
-        // 重阅：临时移出 storyDone 以触发，但不应用 effect
-        replay(node);
-      }
+      if(node) replay(node);
     }));
   }
 
-  function hintFor(s, reachable){
-    if(!reachable) return `传闻 · 第 ${s.day} 日前后将有大事。`;
-    return ({
-      c1s1: "传闻 · 祖师堂地窖 · 夜半有声。",
-      c1s2: "传闻 · 大弟子近日寝食不安，演武场可有蹊跷？",
-      c1s3: "传闻 · 雷霆门遣使叩门 · 须有应敌之力。",
-      c2s1: "传闻 · 藏经阁深处 · 有人闻得笛声。",
-      c2s2: "传闻 · 落霞谷主似有心结盟。",
-      c2s3: "传闻 · 凌雪闭关已三日 · 血纹将现。",
-      c3s1: "传闻 · 客卿无名隐瞒身份 · 真名将露。",
-    })[s.id] || "传闻 · 时机未至。";
-  }
-
   function replay(node){
-    // 暂存 / 进入沉浸 / 完成不重复应用
     const fakeNode = { ...node, choices: [{ label:"合 上 卷 轴", b:"", r:{} }] };
     openImmersive(fakeNode);
   }
