@@ -11,9 +11,10 @@ const Codex = (() => {
     body.innerHTML = "";
     const grid = document.createElement("div"); grid.className = "codex-grid"; body.appendChild(grid);
     let list = G.state.disciples;
-    if(tab==="alive") list = list.filter(d => !d.flags?.dead && !d.flags?.left);
+    // 过滤 hidden（剧情未解锁的弟子）
+    if(tab==="alive") list = list.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden && !d.flags?.locked);
     if(tab==="dead") list = list.filter(d => d.flags?.dead);
-    if(tab==="met") list = list.filter(d => d.flags?.left || d.flags?.locked);
+    if(tab==="met") list = list.filter(d => d.flags?.left || (d.flags?.locked && !d.flags?.hidden));
     if(list.length===0){
       body.innerHTML = `<div style="text-align:center;color:var(--ink-3);padding:60px 0;font-family:Ma Shan Zheng;letter-spacing:.3em">— 暂 无 —</div>`;
       return;

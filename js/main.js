@@ -89,8 +89,28 @@ const Main = (() => {
     document.getElementById("hud-field").textContent = G.state.buildLv.lingtian || 0;
     document.getElementById("hud-stone").textContent = G.state.stone;
     document.getElementById("hud-pill").textContent = G.state.pill;
-    document.getElementById("hud-disc").textContent = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left).length;
+    document.getElementById("hud-disc").textContent = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden && !d.flags?.locked).length;
     document.getElementById("hud-rep").textContent = repName(G.state.rep);
+    // 任务可领取角标
+    const taskBtn = document.querySelector('[data-act="open-tasks"]');
+    if(taskBtn && typeof Tasks !== 'undefined'){
+      const claimable = Tasks.QUESTS.filter(q => q.check() && !G.state.tasks?.[q.id+"_claimed"]).length;
+      const dot = taskBtn.querySelector('.tag-dot');
+      if(claimable > 0){
+        if(!dot){
+          const d = document.createElement('div');
+          d.className = 'tag-dot';
+          d.textContent = claimable;
+          d.style.cssText = 'position:absolute;top:-4px;right:-4px;background:var(--vermilion-2);color:var(--gold-2);font-size:10px;font-family:Ma Shan Zheng;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold);box-shadow:0 0 8px var(--vermilion-2);animation:newPulse 1.2s ease-in-out infinite';
+          taskBtn.style.position = 'relative';
+          taskBtn.appendChild(d);
+        } else {
+          dot.textContent = claimable;
+        }
+      } else {
+        dot?.remove();
+      }
+    }
   }
   function repName(rep){
     if(rep < 30) return "无名小派";
@@ -120,7 +140,6 @@ const Main = (() => {
       }
     }, 1000);
   }
-
   function continueGame(){
     const s = Save.load();
     if(!s) return newGame();
@@ -197,14 +216,35 @@ const Main = (() => {
       else if(a==="open-settings"){
         Modal.openHTML(`
           <h3>设 置</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0">
+            <button class="btn ghost" id="btn-replay">↻ 重 新 开 始</button>
+            <button class="btn ghost" id="btn-show-tutorial">⌘ 重 看 引 导</button>
+          </div>
+          <div style="font-size:11px;color:var(--ink-3);text-align:center;line-height:1.8;margin:8px 0 14px 0">
+            「重新开始」会清空所有进度（弟子、灵石、剧情、装备）。<br>
+            慎重 —— 这一脉的命数，从你按下那一瞬重启。
+          </div>
           <div class="modal-row">
-            <button class="btn ghost" data-act="modal-close">关 闭</button>
-            <button class="btn" id="reset-save" style="border-color:var(--vermilion-3);color:#ffaaaa">重 置 进 度</button>
+            <button class="btn primary" data-act="modal-close">关 闭</button>
           </div>`);
-        document.getElementById("reset-save").onclick = () => {
-          if(confirm("重置所有进度？")) { Save.clear(); location.reload(); }
+        document.getElementById("btn-replay").onclick = () => {
+          if(confirm("确定重新开始？所有进度将被清空。")){
+            Save.clear();
+            location.reload();
+          }
+        };
+        document.getElementById("btn-show-tutorial").onclick = () => {
+          if(G.state){
+            G.state.flags.tut_done = false;
+            Save.persist();
+            Modal.close();
+            setTimeout(() => Tutorial.start(), 300);
+          }
         };
       }
+      else if(a==="open-tasks"){ if(!G.state) return; Tasks.open(); }
+      else if(a==="open-world"){ if(!G.state) return; World.openSects(); }
+      else if(a==="open-inventory"){ if(!G.state) return; Items.open(); }
       else if(a==="modal-close") Modal.close();
       else if(a==="back-hall"){ showScreen("screen-hall"); Disciples.renderHall(); updateAltar(); }
       else if(a==="dispatch"){ showScreen("screen-dispatch"); Dispatch.render(); }
@@ -217,6 +257,12 @@ const Main = (() => {
     });
     if(Save.load()) document.getElementById("btn-continue").style.display = "";
     showScreen("screen-title");
+
+    // HUD 宗门 pill 点击 → 宗门面板
+    setTimeout(() => {
+      const pill = document.getElementById("pill-sect");
+      if(pill) pill.onclick = () => { if(G.state) World.openSectStatus(); };
+    }, 100);
   }
 
   function renderCultivate(){

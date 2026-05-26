@@ -191,7 +191,25 @@ const Story = (() => {
     if(r.unlock) G.state.flags[`unlocked_${r.unlock}`] = true;
     if(r.heimoMood) {
       const h = G.state.disciples.find(d => d.id==="heimo");
-      if(h && r.heimoMood>0){ h.flags.locked = false; }
+      if(h && r.heimoMood>0){ h.flags.locked = false; h.flags.hidden = false; }
+    }
+    // —— 道具发放 ——
+    if(r.giveItem && typeof Items !== 'undefined'){
+      const arr = Array.isArray(r.giveItem) ? r.giveItem : [r.giveItem];
+      arr.forEach(it => Items.add(it.id || it, it.n || 1));
+      toast(`获得：${arr.map(it=>ITEM(it.id||it)?.name||it).join(' · ')}`, "good");
+    }
+    // —— 剧情解锁弟子 ——
+    if(r.recruitDisciple && typeof Disciples !== 'undefined'){
+      const arr = Array.isArray(r.recruitDisciple) ? r.recruitDisciple : [r.recruitDisciple];
+      arr.forEach(id => {
+        const d = G.state.disciples.find(x => x.id===id);
+        if(d && d.flags?.locked){
+          d.flags.locked = false;
+          d.flags.hidden = false;
+          if(typeof Tasks !== 'undefined') Tasks.mark('t_first_recruit');
+        }
+      });
     }
   }
 

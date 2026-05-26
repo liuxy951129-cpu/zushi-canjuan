@@ -8,16 +8,20 @@ const Disciples = (() => {
   function renderHall(){
     const row = document.getElementById("disciples-row");
     row.innerHTML = "";
-    const alive = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left);
+    // 隐藏 hidden 弟子（剧情未解锁），dead/left 也不显示
+    const alive = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden);
     alive.forEach(d => {
       const fig = document.createElement("div");
       fig.className = "disciple-fig";
       fig.dataset.id = d.id;
       const busy = isBusy(d.id);
+      // 新弟子未读自我介绍：加 NEW 角标
+      const isNew = !G.state.flags?.[`met_${d.id}`];
       fig.innerHTML = `
         <div class="df-aura"></div>
         <div class="df-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
         ${busy ? `<div class="df-state" title="出门历练">遣</div>` : (d.flags?.locked ? `<div class="df-state" style="background:#3a3128">封</div>` : "")}
+        ${isNew && !d.flags?.locked && d.id !== "master" ? `<div class="df-new">新 · 自介</div>` : ""}
         <div class="df-realm">${REALMS[d.realm]}</div>
         <div class="df-name">${d.name}</div>
       `;
@@ -33,9 +37,35 @@ const Disciples = (() => {
   function openDetail(did){
     const d = G.state.disciples.find(x => x.id===did);
     if(!d) return;
+    // 第一次见面：弹自我介绍
+    G.state.flags = G.state.flags || {};
+    if(!G.state.flags[`met_${did}`] && d.intro && !d.flags?.locked && did !== "master"){
+      G.state.flags[`met_${did}`] = true;
+      Save.persist();
+      Modal.openHTML(`
+        <div style="display:grid;grid-template-columns:130px 1fr;gap:18px;align-items:center;margin-bottom:14px">
+          <div style="width:130px;height:170px;border-radius:6px;background:url(${picSrc(d.pic)}) center/cover #1a1310;border:1px solid var(--gold);box-shadow:0 0 18px rgba(201,163,90,.25)"></div>
+          <div>
+            <h3 style="margin:0 0 4px 0">${d.name} · ${d.title}</h3>
+            <div style="font-size:11px;color:var(--ink-3);letter-spacing:.18em;margin-bottom:8px">${REALMS[d.realm]} · ${d.gender} · ${d.age}岁</div>
+            <div style="font-size:11px;color:var(--gold-2);font-family:Ma Shan Zheng;letter-spacing:.12em">— 拜见掌门 —</div>
+          </div>
+        </div>
+        <div class="lead" style="white-space:pre-line;font-size:14px;line-height:2;text-align:left;border-left:2px solid var(--gold);padding-left:18px;color:var(--ink-1)">${d.intro}</div>
+        <div class="modal-row" style="margin-top:18px">
+          <button class="btn primary" id="btn-meet-ok">嗯，记下了 →</button>
+        </div>
+      `);
+      // 关闭后跳到详情
+      document.getElementById("btn-meet-ok").onclick = () => {
+        Modal.close();
+        // 直接走详情渲染（met_xxx 已经标 true 不会再触发自介）
+        setTimeout(() => openDetail(did), 200);
+      };
+      return;
+    }
     // 调查 flag：看陈渊详情自动开启 c1s2 的「立刻报官」选项
     if(did === "chenyuan"){
-      G.state.flags = G.state.flags || {};
       if(!G.state.flags.investigated_jade){
         G.state.flags.investigated_jade = true;
         Save.persist();
@@ -46,6 +76,8 @@ const Disciples = (() => {
     const detail = document.getElementById("disciple-detail");
     const expNeeded = REALM_EXP[d.realm] || 99999;
     const canBreak = d.exp >= expNeeded && !d.flags?.locked;
+    // 武器
+    const weaponItem = d.weapon ? ITEM(d.weapon) : null;
     detail.innerHTML = `
       <div class="dd-portrait-wrap">
         <div class="dd-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
@@ -63,6 +95,19 @@ const Disciples = (() => {
           <div class="dd-stat"><span class="l">修为</span><span class="v">${d.exp}/${expNeeded}</span></div>
           <div class="dd-stat"><span class="l">状态</span><span class="v">${isBusy(d.id)?"出门":d.flags?.locked?"封印":"在山"}</span></div>
         </div>
+        ${weaponItem ? `
+        <div class="dd-bonds" style="margin-top:14px">
+          <h4>佩 兵</h4>
+          <div style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(201,163,90,.06);border:1px solid rgba(201,163,90,.2);border-radius:6px">
+            <div style="width:48px;height:48px;border-radius:4px;background:url(assets/icons/${weaponItem.icon}.png) center/cover #1a1310;border:1px solid var(--gold)"></div>
+            <div style="flex:1">
+              <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:16px">${weaponItem.name}</div>
+              <div style="font-size:11px;color:var(--ink-3);margin-top:2px">${weaponItem.ability} · 攻 ${weaponItem.atk}</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--ink-3);margin-top:6px;letter-spacing:.05em">※ 战斗系统将在下一版开放，眼下武器仅作纪念</div>
+        </div>
+        ` : ""}
         <div class="dd-bio">${d.bio.replace(/\n/g,"<br>")}</div>
         ${d.bonds?.length ? `<div class="dd-bonds"><h4>羁 绊</h4>${d.bonds.map(b => {
           const [tid, rel] = b.split(":");
@@ -75,23 +120,39 @@ const Disciples = (() => {
             ${canBreak ? `<button class="btn primary" id="btn-breakthrough">▶ 尝 试 突 破</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-gift">⌧ 赠 礼</button>` : ""}
             ${d.flags?.locked ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
           </div>
           ${!d.flags?.locked && d.id !== "master" ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
+          ${d.flags?.locked && d.unlockHint ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">解 锁 提 示 · ${d.unlockHint}</div>` : ""}
         </div>
       </div>
     `;
     if(canBreak) document.getElementById("btn-breakthrough").onclick = () => attemptBreakthrough(d);
     const cb = document.getElementById("btn-cultivate"); if(cb) cb.onclick = () => quickCultivate(d);
     const ib = document.getElementById("btn-interact"); if(ib) ib.onclick = () => Interact.open(d.id);
+    const gb = document.getElementById("btn-gift"); if(gb) gb.onclick = () => Items.openGiftPicker(d.id);
     const ub = document.getElementById("btn-unlock"); if(ub) ub.onclick = () => {
       if(d.flags.locked && d.id==="master"){ toast("祖师爷只有在 c3s1 后才会出关。", "bad"); return; }
       if(d.id==="heimo" && !G.state.flags.called_heimo && !G.state.flags.heimo_stay){ toast("需先在剧情中触发", "bad"); return; }
       d.flags.locked = false;
+      d.flags.hidden = false;
       toast(`${d.name} 已入门下`, "good");
       Save.persist();
       openDetail(d.id);
     };
+  }
+
+  // 剧情解锁弟子（c1s1 后解锁周破军 + 沈小雨；c3s1 后解锁无名）
+  function unlockByStory(disciple_id){
+    const d = G.state.disciples.find(x => x.id===disciple_id);
+    if(!d) return;
+    d.flags.locked = false;
+    d.flags.hidden = false;
+    Save.persist();
+    renderHall();
+    Main.updateHUD();
+    toast(`${d.name} 入门下`, "good");
   }
 
   function quickCultivate(d){
@@ -121,6 +182,7 @@ const Disciples = (() => {
         const k = STATS[Math.floor(Math.random()*STATS.length)];
         d.stats[k]++;
         SFX.play("up");
+        if(typeof Tasks !== 'undefined') Tasks.mark('t_first_breakthrough');
         toast(`${d.name} 突破至 ${REALMS[d.realm]}！`, "good");
         Modal.openHTML(`
           <h3>境 界 突 破</h3>
@@ -173,7 +235,7 @@ const Disciples = (() => {
     });
   }
 
-  return { picSrc, renderHall, isBusy, openDetail, settleDispatches, ageMonthly };
+  return { picSrc, renderHall, isBusy, openDetail, settleDispatches, ageMonthly, unlockByStory };
 })();
 
 // —— 渡劫小游戏：3 次心魔轮，玩家点击在恰当时机停止 ——

@@ -32,6 +32,7 @@ const Build = (() => {
           if(b.id==="dantang"){ G.state.pill += 1; }
           SFX.play("up");
           toast(`${b.name} 修至 Lv.${lv+1}`, "good");
+          if(typeof Tasks !== 'undefined') Tasks.mark('t_first_build');
           Save.persist();
           Main.updateHUD();
           render();

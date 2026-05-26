@@ -188,7 +188,9 @@ const Tutorial = (() => {
   function placeBubble(step){
     const sp = document.getElementById("tut-spotlight");
     const bubble = document.getElementById("tut-bubble");
+    const layer = document.getElementById("tutorial-layer");
     sp.style.display = "none";
+    layer.classList.remove("has-spotlight");
     if(step.center){
       bubble.className = "center";
       bubble.style.left = ""; bubble.style.top = "";
@@ -202,6 +204,8 @@ const Tutorial = (() => {
     sp.style.top = (r.top - 8) + "px";
     sp.style.width = (r.width + 16) + "px";
     sp.style.height = (r.height + 16) + "px";
+    // 关键修复：开启 has-spotlight 后 mask 不挡点击；spotlight 内 box-shadow 当遮罩
+    layer.classList.add("has-spotlight");
 
     bubble.className = "side-" + (step.side || "top");
     if(step.side === "bottom"){

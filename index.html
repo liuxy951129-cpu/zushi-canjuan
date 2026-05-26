@@ -30,7 +30,10 @@
     <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_stone.png)"></i><b id="hud-stone">100</b><em>灵石</em></div>
     <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_pill.png)"></i><b id="hud-pill">3</b><em>丹药</em></div>
     <div class="stat-pill"><i class="ic-img" style="background-image:url(assets/icons/ic_disciple.png)"></i><b id="hud-disc">3</b><em>弟子</em></div>
-    <div class="stat-pill rep"><i class="ic-img" style="background-image:url(assets/icons/ic_sword.png)"></i><b id="hud-rep">无名小派</b></div>
+    <div class="stat-pill rep" id="pill-sect" title="点击查看宗门等级"><i class="ic-img" style="background-image:url(assets/icons/ic_sword.png)"></i><b id="hud-rep">无名小派</b></div>
+    <button class="icon-btn" data-act="open-tasks" title="新手任务">任</button>
+    <button class="icon-btn" data-act="open-world" title="七大派">界</button>
+    <button class="icon-btn" data-act="open-inventory" title="背囊道具">囊</button>
     <button class="icon-btn" data-act="open-settings" title="设置">⚙</button>
   </div>
 </header>
@@ -66,7 +69,7 @@
       <button class="btn ghost" data-act="open-store">⚯ 仙 缘 阁</button>
       <button class="btn ghost" data-act="open-settings">⚙ 设 置</button>
     </div>
-    <p class="title-credit">v0.9 · 一日一造 · 暗黑武侠仙侠</p>
+    <p class="title-credit">v0.97 · 一日一造 · 暗黑武侠仙侠</p>
   </div>
 </section>
 
@@ -190,6 +193,9 @@
 <script src="js/audio.js"></script>
 <script src="js/save.js"></script>
 <script src="js/tutorial.js"></script>
+<script src="js/items.js"></script>
+<script src="js/world.js"></script>
+<script src="js/tasks.js"></script>
 <script src="js/interact.js"></script>
 <script src="js/recruit.js"></script>
 <script src="js/disciples.js"></script>

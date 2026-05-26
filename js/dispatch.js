@@ -101,6 +101,8 @@ const Dispatch = (() => {
       G.state.flags = G.state.flags || {};
       G.state.flags.tut_dispatched = true;
       G.state.flags.investigated_yard = true; // 任意派遣均算「曾遣弟子查访」
+      // 标记新手任务
+      if(typeof Tasks !== 'undefined') Tasks.mark('t_first_dispatch');
       Save.persist();
       Main.updateHUD();
       Disciples.renderHall();
