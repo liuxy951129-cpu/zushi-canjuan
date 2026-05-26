@@ -124,6 +124,7 @@ const Tutorial = (() => {
     if(G.state?.flags?.tut_done) return;
     active = true;
     idx = 0;
+    document.body.classList.add("tut-on");
     buildUI();
     setTimeout(showStep, 500);
   }
@@ -272,6 +273,7 @@ const Tutorial = (() => {
   function finish(){
     active = false;
     overlay?.remove();
+    document.body.classList.remove("tut-on");
     if(G.state){ G.state.flags = G.state.flags || {}; G.state.flags.tut_done = true; Save.persist(); }
   }
 

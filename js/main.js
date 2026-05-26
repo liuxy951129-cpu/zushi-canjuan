@@ -88,29 +88,13 @@ const Main = (() => {
     document.getElementById("hud-time").textContent = "辰";
     document.getElementById("hud-field").textContent = G.state.buildLv.lingtian || 0;
     document.getElementById("hud-stone").textContent = G.state.stone;
+    const ce = document.getElementById("hud-coin");
+    if(ce) ce.textContent = G.state.coin || 0;
     document.getElementById("hud-pill").textContent = G.state.pill;
     document.getElementById("hud-disc").textContent = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden && !d.flags?.locked).length;
     document.getElementById("hud-rep").textContent = repName(G.state.rep);
-    // 任务可领取角标
-    const taskBtn = document.querySelector('[data-act="open-tasks"]');
-    if(taskBtn && typeof Tasks !== 'undefined'){
-      const claimable = Tasks.QUESTS.filter(q => q.check() && !G.state.tasks?.[q.id+"_claimed"]).length;
-      const dot = taskBtn.querySelector('.tag-dot');
-      if(claimable > 0){
-        if(!dot){
-          const d = document.createElement('div');
-          d.className = 'tag-dot';
-          d.textContent = claimable;
-          d.style.cssText = 'position:absolute;top:-4px;right:-4px;background:var(--vermilion-2);color:var(--gold-2);font-size:10px;font-family:Ma Shan Zheng;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold);box-shadow:0 0 8px var(--vermilion-2);animation:newPulse 1.2s ease-in-out infinite';
-          taskBtn.style.position = 'relative';
-          taskBtn.appendChild(d);
-        } else {
-          dot.textContent = claimable;
-        }
-      } else {
-        dot?.remove();
-      }
-    }
+    // 新手任务浮窗也刷新
+    if(typeof Tasks !== 'undefined' && Tasks.renderFloater) Tasks.renderFloater();
   }
   function repName(rep){
     if(rep < 30) return "无名小派";
@@ -136,7 +120,7 @@ const Main = (() => {
     setTimeout(() => {
       Tutorial.start();
     }, 800);
-    // 引导完成后：1) 播放弟子自我介绍（陈渊 → 凌雪）2) 再触发主线剧情
+    // 引导完成后：1) 播放弟子自我介绍（陈渊 → 凌雪）2) 显示新手任务浮窗
     const interval = setInterval(() => {
       if(G.state?.flags?.tut_done){
         clearInterval(interval);
@@ -145,11 +129,13 @@ const Main = (() => {
           Save.persist();
           setTimeout(() => {
             Story.playIntroSeries(["chenyuan","lingxue"], () => {
-              setTimeout(() => Story.tryAdvance(), 600);
+              setTimeout(() => {
+                Tasks.renderFloater(); // 自介播完显示新手任务浮窗
+              }, 600);
             });
           }, 600);
         } else {
-          setTimeout(() => Story.tryAdvance(), 800);
+          Tasks.renderFloater();
         }
       }
     }, 800);
@@ -162,6 +148,7 @@ const Main = (() => {
     Disciples.renderHall();
     updateHUD();
     updateAltar();
+    setTimeout(() => Tasks.renderFloater(), 400);
   }
 
   function endDay(){
@@ -169,21 +156,23 @@ const Main = (() => {
     Disciples.settleDispatches();
     G.state.day++;
     if(G.state.day % 30 === 0){ G.state.month++; Disciples.ageMonthly(); }
-    // 灵田被动
-    G.state.stone += (G.state.buildLv.lingtian||0) * 30;
+    // 灵田被动：每日生灵石（少）+ 铜钱（多）
+    const lt = G.state.buildLv.lingtian || 0;
+    G.state.stone += lt * 10;
+    G.state.coin = (G.state.coin||0) + lt * 30;
     // 月卡
     if((G.state.monthlyUntil||0) > Date.now()){
       G.state.stone += 50; G.state.pill += 1;
     }
     // 季票
-    if(G.state.passOwned){ G.state.stone += 20; }
+    if(G.state.passOwned){ G.state.coin = (G.state.coin||0) + 20; }
     Save.persist();
     Disciples.renderHall();
     updateHUD();
     SFX.play("bell");
     Modal.openHTML(`
       <h3>入 定 · 第 ${G.state.day-1} 日 终</h3>
-      <div class="lead">月落参横，烛火将熄。<br>明日 · 第 ${G.state.day} 日 · 灵田收 ${(G.state.buildLv.lingtian||0)*30} 灵石</div>
+      <div class="lead">月落参横，烛火将熄。<br>明日 · 第 ${G.state.day} 日 · 灵田收 <b>${lt*10}</b> 灵石 + <b>${lt*30}</b> 铜钱</div>
       <div class="quote">「一日苦修，胜千日空想。」</div>
       <div class="modal-row"><button class="btn primary" data-act="modal-close">推 开 殿 门</button></div>
     `);
@@ -256,13 +245,15 @@ const Main = (() => {
           }
         };
       }
-      else if(a==="open-tasks"){ if(!G.state) return; Tasks.open(); }
       else if(a==="open-world"){ if(!G.state) return; World.openSects(); }
       else if(a==="open-inventory"){ if(!G.state) return; Items.open(); }
       else if(a==="modal-close") Modal.close();
       else if(a==="back-hall"){ showScreen("screen-hall"); Disciples.renderHall(); updateAltar(); }
       else if(a==="dispatch"){ showScreen("screen-dispatch"); Dispatch.render(); }
-      else if(a==="recruit"){ Recruit.open(); }
+      else if(a==="recruit"){
+        if(typeof Tasks !== 'undefined') Tasks.mark('t_visit_market');
+        Recruit.open();
+      }
       else if(a==="cultivate"){ showScreen("screen-cultivate"); renderCultivate(); }
       else if(a==="build"){ showScreen("screen-build"); Build.render(); }
       else if(a==="story"){ showScreen("screen-story"); Story.renderList(); }

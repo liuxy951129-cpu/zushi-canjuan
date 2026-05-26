@@ -36,7 +36,7 @@ const Dispatch = (() => {
 
   function rewardSummary(r){
     const arr = [];
-    if(r.stone) arr.push(r.stone+"灵石");
+    if(r.stone) arr.push(r.stone+"铜钱");
     if(r.exp) arr.push(r.exp+"修为");
     if(r.herb) arr.push(r.herb+"药");
     if(r.pill) arr.push(r.pill+"丹");
@@ -47,8 +47,8 @@ const Dispatch = (() => {
   }
 
   function openPick(q){
-    if(q.needGold && G.state.stone < q.needGold){
-      toast(`需 ${q.needGold} 灵石`, "bad"); return;
+    if(q.needGold && (G.state.coin||0) < q.needGold){
+      toast(`需 ${q.needGold} 铜钱`, "bad"); return;
     }
     Modal.openHTML(`
       <h3>派 遣 · ${q.name}</h3>
@@ -89,7 +89,7 @@ const Dispatch = (() => {
       STATS.forEach(k => sumStats[k] = team.reduce((s,d) => s + (d.stats[k]||0), 0));
       const ok = Object.entries(q.needStats||{}).every(([k,v]) => (sumStats[k]||0) >= v);
       if(!ok){ toast("队伍资质不足", "bad"); return; }
-      if(q.needGold) G.state.stone -= q.needGold;
+      if(q.needGold) G.state.coin = (G.state.coin||0) - q.needGold;
       G.state.pendingDispatches.push({
         dispatchId: q.id,
         disciples: [...picked],
@@ -123,7 +123,8 @@ const Dispatch = (() => {
     let bodyHtml = `<div class="lead">${team.map(d=>d.name).join(" · ")} ${success?"凯旋而归":"狼狈而回"}</div>`;
     if(success){
       const r = q.rewards;
-      if(r.stone) G.state.stone += r.stone;
+      // 派遣 stone 字段实际入铜钱（修为靠 exp）
+      if(r.stone) G.state.coin = (G.state.coin||0) + r.stone;
       if(r.herb) G.state.herb += r.herb;
       if(r.pill) G.state.pill = (G.state.pill||0) + r.pill;
       if(r.scroll) G.state.scroll = (G.state.scroll||0) + r.scroll;

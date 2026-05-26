@@ -150,6 +150,74 @@ input,select,textarea{font-family:inherit;color:inherit;outline:none}
 /* 弟子详情卡片 hover */
 #dd-weapon-cell:hover,#dd-skill-cell:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.4)}
 
+/* —— 新手任务浮窗 —— */
+#task-floater{
+  position:fixed;top:88px;right:24px;z-index:600;
+  animation:tfIn .5s cubic-bezier(.5,1.6,.4,1);
+  pointer-events:auto;
+}
+@keyframes tfIn{from{opacity:0;transform:translateX(80px)}}
+#task-floater.done-fade{animation:tfFade .8s forwards}
+@keyframes tfFade{to{opacity:0;transform:translateX(80px) scale(.8)}}
+#task-floater.just-done .tf-card{
+  background:linear-gradient(135deg,rgba(91,138,114,.4),rgba(91,138,114,.15));
+  border-color:var(--jade);
+}
+#task-floater.just-done .tf-card::after{
+  content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:120px;color:var(--jade);font-weight:bold;
+  text-shadow:0 0 30px var(--jade);
+  animation:checkPop .9s ease-out;
+  pointer-events:none;
+}
+@keyframes checkPop{
+  0%{opacity:0;transform:scale(0.3) rotate(-30deg)}
+  40%{opacity:1;transform:scale(1.2) rotate(0)}
+  100%{opacity:0;transform:scale(1) rotate(0)}
+}
+.tf-card{
+  position:relative;
+  width:240px;padding:12px 14px;
+  background:linear-gradient(135deg,rgba(30,20,18,.95),rgba(15,8,12,.98));
+  border:1.5px solid var(--gold);
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5), 0 0 16px rgba(201,163,90,.2);
+  overflow:hidden;
+}
+.tf-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--candle),var(--gold));
+}
+.tf-step{
+  font-size:10px;color:var(--candle);font-family:"Ma Shan Zheng";
+  letter-spacing:.12em;margin-bottom:6px;
+}
+.tf-title{
+  font-family:"Ma Shan Zheng";color:var(--gold-2);font-size:15px;
+  letter-spacing:.1em;margin-bottom:4px;line-height:1.4;
+}
+.tf-hint{
+  font-size:11px;color:var(--ink-3);font-style:italic;line-height:1.5;margin-bottom:10px;
+}
+.tf-foot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:8px;border-top:1px dashed rgba(201,163,90,.3);
+}
+.tf-reward{font-size:11px;color:var(--candle);letter-spacing:.04em;font-family:"Ma Shan Zheng"}
+.tf-status{font-size:10px;color:var(--ink-3);letter-spacing:.18em;font-family:"Ma Shan Zheng"}
+.tf-claim{
+  padding:4px 12px;background:linear-gradient(180deg,rgba(91,138,114,.7),rgba(40,80,60,.95));
+  border:1px solid var(--jade);color:#fff;font-family:"Ma Shan Zheng";
+  font-size:11px;letter-spacing:.1em;cursor:pointer;border-radius:4px;
+  animation:claimPulse 1.5s ease-in-out infinite;
+}
+.tf-claim:hover{filter:brightness(1.2)}
+@keyframes claimPulse{50%{box-shadow:0 0 12px var(--jade)}}
+
+/* 沉浸式剧情/Modal/Tutorial 时，浮窗自动隐藏 */
+body.immersive-on #task-floater,
+body.tut-on #task-floater{display:none}
+
 .back{padding:8px 14px;color:var(--ink-2);font-size:13px;border:1px solid var(--line);background:rgba(20,10,12,.55);border-radius:1px;letter-spacing:.16em}
 .back:hover{color:var(--gold-2);border-color:var(--gold)}
 

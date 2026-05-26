@@ -18,14 +18,14 @@ const Build = (() => {
           <p style="color:var(--candle);font-size:12px;letter-spacing:.16em;font-family:Ma Shan Zheng">↑ ${next}</p>
           <div class="build-row">
             <div class="build-lvl">${isMax?"圆 满":`修 缮 至 Lv.${lv+1}`}</div>
-            <div class="build-cost">${isMax?"":`${cost} 灵石`}</div>
+            <div class="build-cost">${isMax?"":`${cost} 铜钱`}</div>
           </div>
         </div>
       `;
       if(!isMax){
         card.addEventListener("click", () => {
-          if(G.state.stone < cost){ toast("灵石不足", "bad"); return; }
-          G.state.stone -= cost;
+          if((G.state.coin||0) < cost){ toast("铜钱不足", "bad"); return; }
+          G.state.coin -= cost;
           G.state.buildLv[b.id] = lv + 1;
           // 应用效果
           if(b.id==="lingtian"){ /* 灵田自动每日产出由 endDay 处理 */ }

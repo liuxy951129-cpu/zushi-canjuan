@@ -182,6 +182,7 @@ const Skills = (() => {
   function openTree(disId){
     const d = G.state.disciples.find(function(x){return x.id===disId;});
     if(!d) return;
+    if(typeof Tasks !== 'undefined') Tasks.mark('t_open_skill');
     const trees = getAllTreesFor(disId);
     const equipped = getEquipped(disId).slice();
     let curIdx = 0;

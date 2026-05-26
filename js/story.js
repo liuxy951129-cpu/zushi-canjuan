@@ -31,7 +31,16 @@ const Story = (() => {
 
   function tryAdvance(){
     const next = STORIES.find(s => !G.state.storyDone.includes(s.id) && G.state.day >= s.day);
-    if(next) openImmersive(next);
+    if(!next) return;
+    // c1s1 额外门槛：需先完成新手任务前 3 个（强制养成期）
+    if(next.id === "c1s1"){
+      const t = G.state.tasks || {};
+      const passed = [t.t_first_dispatch, t.t_first_build, t.t_visit_world].filter(Boolean).length;
+      if(passed < 3 && G.state.day < 3){
+        return; // 还没攒够，等下一日
+      }
+    }
+    openImmersive(next);
   }
 
   // —— 沉浸式播放 ——
