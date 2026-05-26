@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>祖师残卷 · 衰败宗门重振录</title>
+<meta name="description" content="七十年内，把这门派从七小派之末抬到三大宗之一 — 暗黑武侠仙侠养成" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0608'/%3E%3Cpath d='M16 18 L48 18 L48 50 L16 50 Z' fill='none' stroke='%23c9a35a' stroke-width='2'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Ma Shan Zheng' font-size='26' fill='%23c9a35a'%3E祖%3C/text%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+QingKe+HuangYou&family=ZCOOL+XiaoWei&family=Long+Cang&family=Noto+Serif+SC:wght@400;600;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+
+<!-- 全局深色背景层 -->
+<div id="ambient-layer">
+  <div class="ambient-mist"></div>
+  <div class="ambient-sparks" id="sparks"></div>
+</div>
+
+<!-- HUD -->
+<header id="hud" class="screen-elem hidden">
+  <div class="hud-left">
+    <div class="seal-mark"><svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="2" fill="rgba(10,6,8,.85)" stroke="#c9a35a" stroke-width="1.5"/><rect x="6" y="6" width="52" height="52" rx="1" fill="none" stroke="#c9a35a" stroke-width=".5"/><text x="32" y="42" text-anchor="middle" font-family="Ma Shan Zheng" font-size="28" fill="#c9a35a">祖</text></svg></div>
+    <div class="hud-title">
+      <h1 id="hud-sect">残墟门</h1>
+      <div class="hud-sub">第 <b id="hud-day">1</b> 日 · <b id="hud-time">辰</b>时 · <b id="hud-month">春</b> · 灵田 <b id="hud-field">1</b> 亩</div>
+    </div>
+  </div>
+  <div class="hud-right">
+    <div class="stat-pill"><span class="ic ic-stone">◇</span><b id="hud-stone">100</b><em>灵石</em></div>
+    <div class="stat-pill"><span class="ic ic-pill">丹</span><b id="hud-pill">3</b><em>丹药</em></div>
+    <div class="stat-pill"><span class="ic ic-disc">徒</span><b id="hud-disc">3</b><em>弟子</em></div>
+    <div class="stat-pill rep"><span class="ic">名</span><b id="hud-rep">无名小派</b></div>
+    <button class="icon-btn" data-act="open-settings" title="设置">⚙</button>
+  </div>
+</header>
+
+<!-- 标题 -->
+<section id="screen-title" class="screen active">
+  <div class="title-bg-img"></div>
+  <div class="title-stack">
+    <div class="title-emblem">
+      <svg viewBox="0 0 240 240">
+        <defs>
+          <radialGradient id="tg1"><stop offset="0" stop-color="#c9a35a"/><stop offset="1" stop-color="#5a3a10"/></radialGradient>
+          <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a83236"/><stop offset="1" stop-color="#5a0e10"/></linearGradient>
+        </defs>
+        <!-- 残破的方印 -->
+        <rect x="20" y="20" width="200" height="200" fill="rgba(10,6,8,.7)" stroke="#c9a35a" stroke-width="3"/>
+        <rect x="32" y="32" width="176" height="176" fill="none" stroke="#c9a35a" stroke-width="1" stroke-dasharray="4 6"/>
+        <text x="120" y="148" text-anchor="middle" font-family="Ma Shan Zheng" font-size="100" fill="url(#tg1)" stroke="#c9a35a" stroke-width="1">祖</text>
+        <!-- 裂纹 -->
+        <path d="M30 40 L80 90 L60 110 L100 130 L80 170 L130 210" stroke="#0a0608" stroke-width="2" fill="none" opacity=".6"/>
+        <path d="M210 50 L180 110 L200 140 L160 180" stroke="#0a0608" stroke-width="1.5" fill="none" opacity=".5"/>
+        <!-- 朱砂血印 -->
+        <circle cx="180" cy="200" r="8" fill="url(#tg2)" opacity=".85"/>
+      </svg>
+    </div>
+    <h1 class="game-title">祖 师 残 卷</h1>
+    <p class="title-sub">SECT · OF · BROKEN · LEGACY</p>
+    <p class="title-poem">「七十年内 · 三大宗 · 或为尘」<br><em>— 残墟门第十七代 始</em></p>
+    <div class="title-cta">
+      <button class="btn primary" data-act="new-game">▷ 接 任 掌 门</button>
+      <button class="btn" id="btn-continue" data-act="continue" style="display:none">⏵ 续 写 残 卷</button>
+      <button class="btn ghost" data-act="open-codex">⌘ 弟 子 名 录</button>
+      <button class="btn ghost" data-act="open-store">⚯ 仙 缘 阁</button>
+      <button class="btn ghost" data-act="open-settings">⚙ 设 置</button>
+    </div>
+    <p class="title-credit">v0.9 · 一日一造 · 暗黑武侠仙侠</p>
+  </div>
+</section>
+
+<!-- 大堂（祖师堂） -->
+<section id="screen-hall" class="screen">
+  <div class="hall-bg"></div>
+  <div class="hall-overlay"></div>
+
+  <!-- 弟子站位（左/中/右 多列） -->
+  <div class="disciples-row" id="disciples-row"></div>
+
+  <!-- 中央祖师牌位/事件 -->
+  <div class="hall-altar">
+    <div class="altar-frame">
+      <div class="altar-tag" id="altar-tag">第一日 · 黎明</div>
+      <h2 id="altar-title">祖师残卷</h2>
+      <p class="altar-quote" id="altar-quote">"夜里有人翻动地窖第三阶。"</p>
+    </div>
+  </div>
+
+  <!-- 行动菜单 -->
+  <nav class="action-bar">
+    <button class="ab-btn" data-act="dispatch"><span class="ab-i">遣</span><span class="ab-l">派 遣</span></button>
+    <button class="ab-btn" data-act="cultivate"><span class="ab-i">修</span><span class="ab-l">闭 关</span></button>
+    <button class="ab-btn" data-act="build"><span class="ab-i">筑</span><span class="ab-l">修 缮</span></button>
+    <button class="ab-btn" data-act="story"><span class="ab-i">史</span><span class="ab-l">主 线</span></button>
+    <button class="ab-btn" data-act="codex"><span class="ab-i">录</span><span class="ab-l">名 录</span></button>
+    <button class="ab-btn primary" data-act="next-day"><span class="ab-i">入</span><span class="ab-l">入 定</span></button>
+  </nav>
+</section>
+
+<!-- 派遣 -->
+<section id="screen-dispatch" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回祖师堂</button>
+    <h2>派 遣 · 任 务 卷</h2>
+    <div></div>
+  </header>
+  <div class="dispatch-grid" id="dispatch-grid"></div>
+</section>
+
+<!-- 修缮 -->
+<section id="screen-build" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回祖师堂</button>
+    <h2>宗 门 · 修 缮</h2>
+    <div></div>
+  </header>
+  <div class="build-grid" id="build-grid"></div>
+</section>
+
+<!-- 闭关（修炼） -->
+<section id="screen-cultivate" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回祖师堂</button>
+    <h2>闭 关 · 修 炼</h2>
+    <div></div>
+  </header>
+  <div class="cultivate-wrap" id="cultivate-wrap"></div>
+</section>
+
+<!-- 主线 -->
+<section id="screen-story" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回祖师堂</button>
+    <h2>主 线 · 残 卷</h2>
+    <div></div>
+  </header>
+  <div class="story-wrap" id="story-wrap"></div>
+</section>
+
+<!-- 名录 -->
+<section id="screen-codex" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回祖师堂</button>
+    <h2>弟 子 名 录</h2>
+    <div class="codex-tabs">
+      <button class="tab active" data-tab="alive">门下</button>
+      <button class="tab" data-tab="met">见过</button>
+      <button class="tab" data-tab="dead">忆故人</button>
+    </div>
+  </header>
+  <div class="codex-body" id="codex-body"></div>
+</section>
+
+<!-- 仙缘阁（付费 mock） -->
+<section id="screen-store" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 回</button>
+    <h2>仙 缘 阁</h2>
+    <div class="codex-tabs">
+      <button class="tab active" data-st="disciple">限定弟子</button>
+      <button class="tab" data-st="theme">宗门皮肤</button>
+      <button class="tab" data-st="pass">月卡 · 季票</button>
+    </div>
+  </header>
+  <div class="store-body" id="store-body"></div>
+</section>
+
+<!-- 弟子详情 -->
+<section id="screen-disciple" class="screen">
+  <header class="topbar">
+    <button class="back" data-act="back-hall">← 关闭</button>
+    <h2 id="disc-title">弟子 · 详情</h2>
+    <div></div>
+  </header>
+  <div class="disciple-detail" id="disciple-detail"></div>
+</section>
+
+<!-- Modal -->
+<div id="modal" class="modal-mask"><div class="modal-card" id="modal-card"></div></div>
+
+<!-- 对话气泡 -->
+<div id="dialog" class="dialog-wrap"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/save.js"></script>
+<script src="js/disciples.js"></script>
+<script src="js/dispatch.js"></script>
+<script src="js/build.js"></script>
+<script src="js/story.js"></script>
+<script src="js/codex.js"></script>
+<script src="js/store.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
