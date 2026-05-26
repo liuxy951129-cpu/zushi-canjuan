@@ -1,6 +1,6 @@
 /* 存档 */
 const Save = (() => {
-  const KEY = "zsc_save_v4"; // v4: 铜钱系统 + 新手浮窗
+  const KEY = "zsc_save_v5"; // v5: 新手任务浮窗 + 自介修复
   function load(){ try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(G.state)); }catch(e){} }
   function clear(){
@@ -8,6 +8,7 @@ const Save = (() => {
     localStorage.removeItem("zsc_save_v1");
     localStorage.removeItem("zsc_save_v2");
     localStorage.removeItem("zsc_save_v3");
+    localStorage.removeItem("zsc_save_v4");
   }
   function newSave(){
     return {

@@ -60,7 +60,7 @@ const Dialog = (() => {
     show._t = setTimeout(() => { wrap.classList.remove("active"); wrap.innerHTML=""; }, 5500);
     wrap.onclick = () => { wrap.classList.remove("active"); wrap.innerHTML=""; };
   }
-  return { show };
+  return { show, get _t(){ return show._t; }, set _t(v){ show._t = v; } };
 })();
 
 // 烛火粒子
@@ -112,15 +112,16 @@ const Main = (() => {
     Disciples.renderHall();
     updateHUD();
     updateAltar();
-    // 清掉所有可能残留的浮层（修闪动 bug）
+    // 清残留浮层
     const dlg = document.getElementById("dialog");
-    if(dlg){ dlg.classList.remove("active"); dlg.innerHTML = ""; }
+    if(dlg){ dlg.classList.remove("active"); dlg.innerHTML = ""; dlg.onclick = null; clearTimeout(Dialog._t); }
     Modal.close();
-    // 跳过 D1 自动剧情，先让祖师爷带新手引导
+    document.querySelectorAll(".toast-item").forEach(t => t.remove());
+    // 延迟启动引导（避免与场景切换闪动冲突）
     setTimeout(() => {
       Tutorial.start();
-    }, 800);
-    // 引导完成后：1) 播放弟子自我介绍（陈渊 → 凌雪）2) 显示新手任务浮窗
+    }, 900);
+    // 引导完成后：1) 弟子自介 2) 显示新手任务浮窗
     const interval = setInterval(() => {
       if(G.state?.flags?.tut_done){
         clearInterval(interval);
@@ -129,9 +130,7 @@ const Main = (() => {
           Save.persist();
           setTimeout(() => {
             Story.playIntroSeries(["chenyuan","lingxue"], () => {
-              setTimeout(() => {
-                Tasks.renderFloater(); // 自介播完显示新手任务浮窗
-              }, 600);
+              setTimeout(() => Tasks.renderFloater(), 600);
             });
           }, 600);
         } else {

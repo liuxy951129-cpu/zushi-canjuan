@@ -1,37 +1,110 @@
 /* ================================================================
-   派遣系统
+   派遣系统 · 分类 tab + 卡片列表
    ================================================================ */
 const Dispatch = (() => {
 
+  // 派遣分类
+  const CATEGORIES = [
+    { tag:"全部", icon:"ic_dispatch", color:"#c9a35a" },
+    { tag:"采药", icon:"ic_disp_herb", color:"#5b8a72" },
+    { tag:"护镖", icon:"ic_disp_escort", color:"#c79a4a" },
+    { tag:"灭妖", icon:"ic_disp_hunt", color:"#a83236" },
+    { tag:"谈判", icon:"ic_disp_negotiate", color:"#5c8aa8" },
+    { tag:"探秘", icon:"ic_disp_explore", color:"#7a5c3a" },
+    { tag:"宗门战", icon:"ic_disp_war", color:"#d4554f" },
+  ];
+  let curCat = "全部";
+
   function render(){
-    const grid = document.getElementById("dispatch-grid");
-    grid.innerHTML = "";
-    DISPATCHES.forEach(q => {
-      // 隐藏剧情专属
-      if(q.storyOnly && !G.state.flags?.[`unlocked_${q.id}`] && !G.state.flags[q.storyOnly]) return;
-      if(q.minDay && G.state.day < q.minDay) return;
+    const root = document.getElementById("dispatch-grid");
+    root.innerHTML = "";
+    // 渲染外层 layout
+    root.style.display = "flex";
+    root.style.gap = "16px";
+    root.style.padding = "0 24px";
+    root.style.alignItems = "flex-start";
+    root.innerHTML = `
+      <aside id="disp-cats" style="
+        width:120px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;
+        position:sticky;top:90px;
+      "></aside>
+      <div id="disp-list" style="flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px"></div>
+    `;
+    renderCats();
+    renderList();
+  }
+
+  function renderCats(){
+    const wrap = document.getElementById("disp-cats");
+    wrap.innerHTML = "";
+    CATEGORIES.forEach(c => {
+      const cnt = c.tag === "全部"
+        ? DISPATCHES.filter(visible).length
+        : DISPATCHES.filter(q => visible(q) && q.tag === c.tag).length;
+      const btn = document.createElement("div");
+      btn.className = "disp-cat" + (curCat === c.tag ? " active" : "");
+      btn.dataset.cat = c.tag;
+      btn.style.cssText = `
+        position:relative;padding:10px 8px;text-align:center;cursor:pointer;
+        background:${curCat===c.tag ? 'linear-gradient(180deg,'+c.color+'44,'+c.color+'11)' : 'rgba(20,15,12,.7)'};
+        border:1.5px solid ${curCat===c.tag ? c.color : 'var(--line)'};
+        border-radius:6px;transition:all .25s;
+      `;
+      btn.innerHTML = `
+        <div style="width:42px;height:42px;margin:0 auto 4px;background:url(assets/icons/${c.icon}.png) center/cover #1a1310;border:1px solid ${c.color};border-radius:6px"></div>
+        <div style="font-family:Ma Shan Zheng;color:${curCat===c.tag?c.color:'var(--gold-2)'};font-size:13px;letter-spacing:.12em">${c.tag}</div>
+        <div style="font-size:10px;color:var(--ink-3);margin-top:2px">${cnt} 项</div>
+      `;
+      btn.onclick = () => { curCat = c.tag; renderCats(); renderList(); };
+      wrap.appendChild(btn);
+    });
+  }
+
+  function visible(q){
+    if(q.storyOnly && !G.state.flags?.[`unlocked_${q.id}`] && !G.state.flags[q.storyOnly]) return false;
+    if(q.minDay && G.state.day < q.minDay) return false;
+    return true;
+  }
+
+  function renderList(){
+    const list = document.getElementById("disp-list");
+    list.innerHTML = "";
+    const filtered = DISPATCHES.filter(q => visible(q) && (curCat === "全部" || q.tag === curCat));
+    if(filtered.length === 0){
+      list.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--ink-3);padding:60px 0;font-family:Ma Shan Zheng;letter-spacing:.3em">— 此 类 暂 无 任 务 —</div>`;
+      return;
+    }
+    const haveAvailableDisc = G.state.disciples.filter(d => !Disciples.isBusy(d.id) && !d.flags?.dead && !d.flags?.locked && !d.flags?.hidden).length > 0;
+    filtered.forEach(q => {
+      const cat = CATEGORIES.find(c => c.tag === q.tag) || CATEGORIES[0];
       const card = document.createElement("div");
-      card.className = "dispatch-card" + (G.state.disciples.filter(d => !Disciples.isBusy(d.id) && !d.flags?.dead && !d.flags?.locked).length===0 ? " locked" : "");
+      card.className = "dispatch-card" + (haveAvailableDisc ? "" : " locked");
       const tagCls = q.diff>=4 ? "tag-boss" : q.diff>=3 ? "tag-elite" : "";
+      const diffStars = "★".repeat(q.diff) + "☆".repeat(5-q.diff);
       card.innerHTML = `
-        <span class="dc-tag ${tagCls}">${q.tag} · 难度 ${q.diff}</span>
-        <h3 class="dc-name">${q.name}</h3>
-        <p class="dc-desc">${q.desc}</p>
-        <div class="dc-stats">
-          ${Object.entries(q.needStats||{}).map(([k,v]) => `<div class="dc-stat">${STAT_LABEL[k]} ≥ ${v}</div>`).join("")}
-          <div class="dc-stat diff">${q.days} 日</div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:54px;height:54px;background:url(assets/icons/${cat.icon}.png) center/cover #1a1310;border:1.5px solid ${cat.color};border-radius:6px;flex-shrink:0;box-shadow:0 0 10px ${cat.color}33"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <h3 class="dc-name" style="margin:0;font-size:16px">${q.name}</h3>
+              <span style="font-size:11px;color:${cat.color};font-family:Ma Shan Zheng;letter-spacing:.05em">${q.tag}</span>
+            </div>
+            <div style="font-size:11px;color:var(--candle);letter-spacing:.05em;margin:3px 0 6px 0">难度 ${diffStars} · ${q.days} 日</div>
+          </div>
         </div>
-        <div class="dc-reward">
-          <span>回报</span>
-          <b>${rewardSummary(q.rewards)}</b>
+        <p class="dc-desc" style="margin:10px 0 8px 0;font-size:12px;color:var(--ink-2);line-height:1.7">${q.desc.replace(/\n/g,"<br>")}</p>
+        <div class="dc-stats" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+          ${Object.entries(q.needStats||{}).map(([k,v]) => `<span style="padding:2px 7px;font-size:11px;background:rgba(91,138,114,.15);border:1px solid var(--jade);color:var(--jade);border-radius:3px">${STAT_LABEL[k]}≥${v}</span>`).join("")}
+          ${q.needGold ? `<span style="padding:2px 7px;font-size:11px;background:rgba(199,154,74,.15);border:1px solid var(--candle);color:var(--candle);border-radius:3px">需 ${q.needGold} 铜钱</span>` : ""}
+        </div>
+        <div class="dc-reward" style="padding-top:8px;border-top:1px dashed rgba(201,163,90,.3);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px;color:var(--ink-3);letter-spacing:.18em">回报</span>
+          <b style="color:var(--gold-2);font-size:12px">${rewardSummary(q.rewards)}</b>
         </div>
       `;
       card.addEventListener("click", () => openPick(q));
-      grid.appendChild(card);
+      list.appendChild(card);
     });
-    if(grid.children.length===0){
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--ink-3);padding:40px 0;font-family:Ma Shan Zheng;letter-spacing:.3em">— 暂 无 任 务 —</div>`;
-    }
   }
 
   function rewardSummary(r){

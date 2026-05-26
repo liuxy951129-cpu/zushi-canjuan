@@ -151,12 +151,19 @@ const Story = (() => {
         btn.onclick = () => {
           if(locked){ toast(lockMsg, "bad"); return; }
           applyChoice(c.r||{});
-          G.state.storyDone.push(node.id);
+          // 自介节点不进 storyDone
+          if(!String(node.id).startsWith("intro_")){
+            if(!G.state.storyDone.includes(node.id)) G.state.storyDone.push(node.id);
+          }
           Save.persist();
           Main.updateHUD();
           closeImmersive();
           SFX.play("chime");
           Main.updateAltar();
+          // 自介专用：触发下一个
+          if(node._onAfterClose){
+            node._onAfterClose();
+          }
         };
         cont.appendChild(btn);
       });
@@ -277,7 +284,7 @@ const Story = (() => {
     openImmersive(fakeNode);
   }
 
-  // —— 弟子自我介绍：沉浸式串行播放（一个个 ID）——
+  // —— 弟子自我介绍：沉浸式串行播放 ——
   function playIntroSeries(disciple_ids, onAllDone){
     const ids = disciple_ids.slice();
     function next(){
@@ -285,11 +292,9 @@ const Story = (() => {
       const did = ids.shift();
       const d = G.state.disciples.find(x => x.id === did);
       if(!d || !d.introScenes){ next(); return; }
-      // 标记已见
       G.state.flags = G.state.flags || {};
       G.state.flags[`met_${did}`] = true;
       Save.persist();
-      // 构造一个临时剧情节点，无选项（仅一句"嗯，记下了"）
       const scenes = d.introScenes.map(sc => ({
         bg: sc.bg || "sc_temple",
         speaker: d.pic,
@@ -304,18 +309,11 @@ const Story = (() => {
         body:"",
         scenes,
         choices:[
-          { label:"嗯，记下了", b:"", r:{} }
+          { label:"嗯，记下了", b:"", r:{ _introNext:true } }
         ],
+        _onAfterClose: () => setTimeout(next, 500),
       };
       openImmersive(node);
-      // 监听关闭后跳下一位
-      const watcher = setInterval(() => {
-        const ov = document.getElementById("immersive");
-        if(!ov || !ov.classList.contains("active")){
-          clearInterval(watcher);
-          setTimeout(next, 400);
-        }
-      }, 200);
     }
     next();
   }
