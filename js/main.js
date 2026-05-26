@@ -119,6 +119,8 @@ const Main = (() => {
     if(dlg){ dlg.classList.remove("active"); dlg.innerHTML = ""; dlg.onclick = null; clearTimeout(Dialog._t); }
     Modal.close();
     document.querySelectorAll(".toast-item").forEach(t => t.remove());
+    // 任务浮窗：兜底立刻渲染一次，引导/自介过程中可能被 CSS 隐藏，但状态已就绪
+    setTimeout(() => { if(typeof Tasks!=='undefined') Tasks.renderFloater(); }, 200);
     // 延迟启动引导（避免与场景切换闪动冲突）
     setTimeout(() => {
       Tutorial.start();
@@ -269,6 +271,7 @@ const Main = (() => {
       else if(a==="cultivate"){ showScreen("screen-cultivate"); renderCultivate(); }
       else if(a==="build"){ showScreen("screen-build"); Build.render(); }
       else if(a==="story"){ showScreen("screen-story"); Story.renderList(); }
+      else if(a==="battle-hub"){ if(!G.state) return; if(typeof Battle!=='undefined') Battle.openHub(); }
       else if(a==="codex"){ showScreen("screen-codex"); Codex.refresh(); }
       else if(a==="next-day") endDay();
     });

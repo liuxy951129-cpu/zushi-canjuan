@@ -56,6 +56,10 @@ const Story = (() => {
       overlay = document.createElement("div");
       overlay.id = "immersive";
       document.body.appendChild(overlay);
+    } else {
+      // 复用旧 overlay：取消正在销毁的定时器
+      overlay.dataset.destroying = "";
+      if(overlay._destroyTimer){ clearTimeout(overlay._destroyTimer); overlay._destroyTimer = null; }
     }
     overlay.innerHTML = `
       <div class="im-bg"></div>
@@ -191,7 +195,13 @@ const Story = (() => {
     if(!ov) return;
     ov.classList.remove("active");
     document.body.classList.remove("immersive-on");
-    setTimeout(() => { ov.remove(); }, 600);
+    // 标记销毁中：openImmersive 若发现存在该 mark 会等待
+    ov.dataset.destroying = "1";
+    const timer = setTimeout(() => {
+      // 只有还在销毁状态才 remove（避免被新 open 抢占后误删）
+      if(ov && ov.dataset.destroying === "1") ov.remove();
+    }, 600);
+    ov._destroyTimer = timer;
   }
 
   function applyChoice(r){
