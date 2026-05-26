@@ -85,13 +85,8 @@ const Tutorial = (() => {
     },
     {
       id:"action_dispatch", target:'[data-tut="dispatch"]', side:"top",
-      text:`「灵石不会从天上掉下来。\n\n你得派他们下山——\n采草、护镖、灭妖、查访……\n\n你点这「派遣」，给他们一桩活计去做。」`,
-      next:"act-dispatch",
-    },
-    {
-      id:"on_dispatch", center:true,
-      text:`「随便挑一桩你觉得最稳的——\n「东山采草」最易，最适合开手。\n\n选 1~2 个弟子组队，确认即可。\n\n选完，回这祖师堂来。」`,
-      next:"flag:tut_dispatched",
+      text:`「灵石不会从天上掉下来。\n\n你得派他们下山——\n采草、护镖、灭妖、查访……\n\n这「派遣」按钮，你引导后亲自试试。」`,
+      next:"click",
     },
     {
       id:"action_recruit", target:'[data-act="recruit"]', side:"top",
@@ -115,8 +110,9 @@ const Tutorial = (() => {
     },
     {
       id:"end", center:true,
-      text:`「好了，孩子。\n\n你眼前这条路，我陪不了你太久。\n\n若有疑虑，回这祖师堂来——\n我虽闭关，仍会听见你叫一声。\n\n去罢。」`,
+      text:`「好了，孩子。\n\n你眼前这条路，我陪不了你太久。\n\n若有疑虑，回这祖师堂来——\n我虽闭关，仍会听见你叫一声。\n\n弟子们已等不及要拜见新掌门——\n我先退下。」`,
       next:"click",
+      isLast:true,
     },
   ];
 
@@ -225,6 +221,7 @@ const Tutorial = (() => {
 
     if(step.next === "click"){
       nextBtn.style.display = "";
+      nextBtn.textContent = step.isLast ? "结 束 引 导 ▷" : "继 续 ▷";
     }
     if(step.next === "choice" && step.choices){
       step.choices.forEach(c => {

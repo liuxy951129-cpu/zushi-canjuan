@@ -249,5 +249,80 @@ const Items = (() => {
     return `「这……合适吗？」（她/他犹豫地接过）`;
   }
 
-  return { add, consume, count, open, openItem, openGiftPicker, openPillUse };
+  // —— 武器库换装 ——
+  function openWeaponPicker(disId){
+    const d = G.state.disciples.find(x => x.id===disId);
+    if(!d){ return; }
+    // 当前武器 + 背包武器
+    const cur = d.weapon ? ITEM(d.weapon) : null;
+    // 找出背包中所有武器
+    const weaponIds = Object.keys(G.state.inv||{}).filter(id => {
+      const it = ITEM(id);
+      return it && it.type === "weapon" && (G.state.inv[id]||0) > 0;
+    });
+    // 也允许"未装备"选项
+    const list = weaponIds.map(id => ITEM(id));
+
+    Modal.openHTML(`
+      <h3>${d.name} · 更 换 佩 兵</h3>
+      <div class="lead" style="font-size:12px;color:var(--ink-3);text-align:center">「掌门，要换哪一柄？」</div>
+      ${cur ? `
+        <div style="margin:12px 0;padding:10px;background:rgba(201,163,90,.08);border:1px solid var(--gold);border-radius:6px;display:flex;gap:12px;align-items:center">
+          <div style="width:42px;height:42px;background:url(assets/icons/${cur.icon}.png) center/cover #1a1310;border:1px solid var(--gold);border-radius:4px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--ink-3)">当 前</div>
+            <div style="font-family:Ma Shan Zheng;color:var(--gold-2)">${cur.name} · ${cur.ability}</div>
+          </div>
+          <button class="mini-btn" id="btn-unequip">卸 下</button>
+        </div>
+      ` : ""}
+      <div style="font-size:12px;color:var(--gold-2);font-family:Ma Shan Zheng;letter-spacing:.18em;margin:14px 0 8px 0">— 武 器 库 —</div>
+      ${list.length === 0 ? `<div style="text-align:center;color:var(--ink-3);padding:20px 0;font-style:italic">背囊里没有备用兵刃。<br>（剧情或派遣可能掉落）</div>` : `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+          ${list.map(it => {
+            const c = G.state.inv[it.id] || 0;
+            return `<div data-eq="${it.id}" class="item-cell rar-${it.rarity}" style="display:flex;gap:10px;padding:10px;background:rgba(20,15,12,.7);border:1px solid var(--gold);border-radius:6px;cursor:pointer">
+              <div style="width:46px;height:46px;background:url(assets/icons/${it.icon}.png) center/cover #1a1310;border:1px solid var(--gold);border-radius:4px;flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:13px">${it.name} <span style="font-size:10px;color:var(--ink-3)">×${c}</span></div>
+                <div style="font-size:10px;color:var(--ink-3);margin-top:2px">攻 ${it.atk||0} · ${it.ability||"—"}</div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      `}
+      <div class="modal-row" style="margin-top:14px"><button class="btn ghost" data-act="modal-close">作 罢</button></div>
+    `);
+
+    document.querySelectorAll("[data-eq]").forEach(el => {
+      el.onclick = () => {
+        const newWid = el.dataset.eq;
+        // 把当前武器放回背包
+        if(d.weapon){
+          add(d.weapon, 1);
+        }
+        // 从背包扣除新武器
+        if(!consume(newWid, 1)){ toast("无此物", "bad"); return; }
+        d.weapon = newWid;
+        Save.persist();
+        SFX?.play?.("chime");
+        toast(`${d.name} 换 ${ITEM(newWid).name}`, "good");
+        Modal.close();
+        setTimeout(() => Disciples.openDetail(disId), 200);
+      };
+    });
+    const ub = document.getElementById("btn-unequip");
+    if(ub) ub.onclick = () => {
+      if(d.weapon){
+        add(d.weapon, 1);
+        d.weapon = null;
+        Save.persist();
+        toast(`${d.name} 卸下武器`, "good");
+        Modal.close();
+        setTimeout(() => Disciples.openDetail(disId), 200);
+      }
+    };
+  }
+
+  return { add, consume, count, open, openItem, openGiftPicker, openPillUse, openWeaponPicker };
 })();

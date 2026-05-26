@@ -268,5 +268,48 @@ const Story = (() => {
     openImmersive(fakeNode);
   }
 
-  return { tryAdvance, open: openImmersive, renderList, closeImmersive };
+  // —— 弟子自我介绍：沉浸式串行播放（一个个 ID）——
+  function playIntroSeries(disciple_ids, onAllDone){
+    const ids = disciple_ids.slice();
+    function next(){
+      if(ids.length === 0){ onAllDone && onAllDone(); return; }
+      const did = ids.shift();
+      const d = G.state.disciples.find(x => x.id === did);
+      if(!d || !d.introScenes){ next(); return; }
+      // 标记已见
+      G.state.flags = G.state.flags || {};
+      G.state.flags[`met_${did}`] = true;
+      Save.persist();
+      // 构造一个临时剧情节点，无选项（仅一句"嗯，记下了"）
+      const scenes = d.introScenes.map(sc => ({
+        bg: sc.bg || "sc_temple",
+        speaker: d.pic,
+        name: d.name,
+        text: sc.text,
+        quote: sc.quote || "",
+      }));
+      const node = {
+        id:`intro_${did}`,
+        chapter:0,
+        title:`${d.name} · 拜 见 掌 门`,
+        body:"",
+        scenes,
+        choices:[
+          { label:"嗯，记下了", b:"", r:{} }
+        ],
+      };
+      openImmersive(node);
+      // 监听关闭后跳下一位
+      const watcher = setInterval(() => {
+        const ov = document.getElementById("immersive");
+        if(!ov || !ov.classList.contains("active")){
+          clearInterval(watcher);
+          setTimeout(next, 400);
+        }
+      }, 200);
+    }
+    next();
+  }
+
+  return { tryAdvance, open: openImmersive, renderList, closeImmersive, playIntroSeries };
 })();

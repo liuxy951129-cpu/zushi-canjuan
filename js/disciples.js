@@ -15,13 +15,10 @@ const Disciples = (() => {
       fig.className = "disciple-fig";
       fig.dataset.id = d.id;
       const busy = isBusy(d.id);
-      // 新弟子未读自我介绍：加 NEW 角标
-      const isNew = !G.state.flags?.[`met_${d.id}`];
       fig.innerHTML = `
         <div class="df-aura"></div>
         <div class="df-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
         ${busy ? `<div class="df-state" title="出门历练">遣</div>` : (d.flags?.locked ? `<div class="df-state" style="background:#3a3128">封</div>` : "")}
-        ${isNew && !d.flags?.locked && d.id !== "master" ? `<div class="df-new">新 · 自介</div>` : ""}
         <div class="df-realm">${REALMS[d.realm]}</div>
         <div class="df-name">${d.name}</div>
       `;
@@ -37,33 +34,7 @@ const Disciples = (() => {
   function openDetail(did){
     const d = G.state.disciples.find(x => x.id===did);
     if(!d) return;
-    // 第一次见面：弹自我介绍
     G.state.flags = G.state.flags || {};
-    if(!G.state.flags[`met_${did}`] && d.intro && !d.flags?.locked && did !== "master"){
-      G.state.flags[`met_${did}`] = true;
-      Save.persist();
-      Modal.openHTML(`
-        <div style="display:grid;grid-template-columns:130px 1fr;gap:18px;align-items:center;margin-bottom:14px">
-          <div style="width:130px;height:170px;border-radius:6px;background:url(${picSrc(d.pic)}) center/cover #1a1310;border:1px solid var(--gold);box-shadow:0 0 18px rgba(201,163,90,.25)"></div>
-          <div>
-            <h3 style="margin:0 0 4px 0">${d.name} · ${d.title}</h3>
-            <div style="font-size:11px;color:var(--ink-3);letter-spacing:.18em;margin-bottom:8px">${REALMS[d.realm]} · ${d.gender} · ${d.age}岁</div>
-            <div style="font-size:11px;color:var(--gold-2);font-family:Ma Shan Zheng;letter-spacing:.12em">— 拜见掌门 —</div>
-          </div>
-        </div>
-        <div class="lead" style="white-space:pre-line;font-size:14px;line-height:2;text-align:left;border-left:2px solid var(--gold);padding-left:18px;color:var(--ink-1)">${d.intro}</div>
-        <div class="modal-row" style="margin-top:18px">
-          <button class="btn primary" id="btn-meet-ok">嗯，记下了 →</button>
-        </div>
-      `);
-      // 关闭后跳到详情
-      document.getElementById("btn-meet-ok").onclick = () => {
-        Modal.close();
-        // 直接走详情渲染（met_xxx 已经标 true 不会再触发自介）
-        setTimeout(() => openDetail(did), 200);
-      };
-      return;
-    }
     // 调查 flag：看陈渊详情自动开启 c1s2 的「立刻报官」选项
     if(did === "chenyuan"){
       if(!G.state.flags.investigated_jade){
@@ -98,14 +69,26 @@ const Disciples = (() => {
         ${weaponItem ? `
         <div class="dd-bonds" style="margin-top:14px">
           <h4>佩 兵</h4>
-          <div style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(201,163,90,.06);border:1px solid rgba(201,163,90,.2);border-radius:6px">
+          <div id="dd-weapon-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(201,163,90,.06);border:1px solid rgba(201,163,90,.2);border-radius:6px;cursor:pointer;transition:all .25s" title="点击更换武器">
             <div style="width:48px;height:48px;border-radius:4px;background:url(assets/icons/${weaponItem.icon}.png) center/cover #1a1310;border:1px solid var(--gold)"></div>
             <div style="flex:1">
-              <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:16px">${weaponItem.name}</div>
+              <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:16px">${weaponItem.name} <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击更换 ▸</span></div>
               <div style="font-size:11px;color:var(--ink-3);margin-top:2px">${weaponItem.ability} · 攻 ${weaponItem.atk}</div>
             </div>
           </div>
           <div style="font-size:10px;color:var(--ink-3);margin-top:6px;letter-spacing:.05em">※ 战斗系统将在下一版开放，眼下武器仅作纪念</div>
+        </div>
+        ` : ""}
+        ${d.skill ? `
+        <div class="dd-bonds" style="margin-top:14px">
+          <h4>技 能</h4>
+          <div id="dd-skill-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(91,138,114,.08);border:1px solid rgba(91,138,114,.3);border-radius:6px;cursor:pointer;transition:all .25s" title="点击查看技能树">
+            <div style="width:48px;height:48px;border-radius:4px;background:linear-gradient(135deg, var(--jade), #2a4a3a);border:1px solid var(--jade);display:flex;align-items:center;justify-content:center;font-family:Ma Shan Zheng;font-size:22px;color:#fff">技</div>
+            <div style="flex:1">
+              <div style="font-family:Ma Shan Zheng;color:var(--jade);font-size:16px">${d.skill} <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击进入技能树 ▸</span></div>
+              <div style="font-size:11px;color:var(--ink-3);margin-top:2px" id="dd-skill-summary">— 加载中 —</div>
+            </div>
+          </div>
         </div>
         ` : ""}
         <div class="dd-bio">${d.bio.replace(/\n/g,"<br>")}</div>
@@ -132,6 +115,18 @@ const Disciples = (() => {
     const cb = document.getElementById("btn-cultivate"); if(cb) cb.onclick = () => quickCultivate(d);
     const ib = document.getElementById("btn-interact"); if(ib) ib.onclick = () => Interact.open(d.id);
     const gb = document.getElementById("btn-gift"); if(gb) gb.onclick = () => Items.openGiftPicker(d.id);
+    // 武器卡点击 → 武器库换装
+    const wc = document.getElementById("dd-weapon-cell");
+    if(wc) wc.onclick = () => { if(typeof Items !== 'undefined') Items.openWeaponPicker(d.id); };
+    // 技能卡点击 → 技能树
+    const sc = document.getElementById("dd-skill-cell");
+    if(sc && typeof Skills !== 'undefined') sc.onclick = () => Skills.openTree(d.id);
+    // 技能摘要
+    const sum = document.getElementById("dd-skill-summary");
+    if(sum && typeof Skills !== 'undefined'){
+      const st = Skills.summary(d.id);
+      sum.textContent = `已点亮 ${st.unlocked}/${st.total} · 已装配 ${st.equipped}/3`;
+    }
     const ub = document.getElementById("btn-unlock"); if(ub) ub.onclick = () => {
       if(d.flags.locked && d.id==="master"){ toast("祖师爷只有在 c3s1 后才会出关。", "bad"); return; }
       if(d.id==="heimo" && !G.state.flags.called_heimo && !G.state.flags.heimo_stay){ toast("需先在剧情中触发", "bad"); return; }

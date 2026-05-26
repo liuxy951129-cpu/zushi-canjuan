@@ -128,17 +128,31 @@ const Main = (() => {
     Disciples.renderHall();
     updateHUD();
     updateAltar();
+    // 清掉所有可能残留的浮层（修闪动 bug）
+    const dlg = document.getElementById("dialog");
+    if(dlg){ dlg.classList.remove("active"); dlg.innerHTML = ""; }
+    Modal.close();
     // 跳过 D1 自动剧情，先让祖师爷带新手引导
     setTimeout(() => {
       Tutorial.start();
-    }, 700);
-    // 引导完成后再触发剧情
+    }, 800);
+    // 引导完成后：1) 播放弟子自我介绍（陈渊 → 凌雪）2) 再触发主线剧情
     const interval = setInterval(() => {
       if(G.state?.flags?.tut_done){
         clearInterval(interval);
-        setTimeout(() => Story.tryAdvance(), 800);
+        if(!G.state.flags.intro_played){
+          G.state.flags.intro_played = true;
+          Save.persist();
+          setTimeout(() => {
+            Story.playIntroSeries(["chenyuan","lingxue"], () => {
+              setTimeout(() => Story.tryAdvance(), 600);
+            });
+          }, 600);
+        } else {
+          setTimeout(() => Story.tryAdvance(), 800);
+        }
       }
-    }, 1000);
+    }, 800);
   }
   function continueGame(){
     const s = Save.load();

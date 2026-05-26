@@ -1,11 +1,12 @@
 /* 存档 */
 const Save = (() => {
-  const KEY = "zsc_save_v2"; // v2: 加入背包系统
+  const KEY = "zsc_save_v3"; // v3: 加入技能装配 + 弟子 introScenes
   function load(){ try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(G.state)); }catch(e){} }
   function clear(){
     localStorage.removeItem(KEY);
-    localStorage.removeItem("zsc_save_v1"); // 清旧存档
+    localStorage.removeItem("zsc_save_v1");
+    localStorage.removeItem("zsc_save_v2");
   }
   function newSave(){
     return {
