@@ -145,11 +145,33 @@ const World = (() => {
         <span style="color:${s.danger>=8?'var(--vermilion-3)':'var(--candle)'}">${dangerBars}</span>
       </div>
       <div style="font-size:13px;color:var(--ink-1);line-height:2;white-space:pre-line;border-left:2px solid ${pos.color};padding-left:12px">${s.note}</div>
-      <div class="modal-row" style="margin-top:14px">
+      ${(!me && typeof ENEMY_SECTS!=='undefined' && ENEMY_SECTS[s.id]) ? `
+        <div style="margin-top:14px">
+          <h4 style="font-family:Ma Shan Zheng;color:var(--gold-2);letter-spacing:.16em;margin:0 0 8px 0;font-size:14px">门 下 高 手 名 录</h4>
+          <div class="sect-members">
+            ${ENEMY_SECTS[s.id].members.map(m => {
+              const realmName = ["炼气","筑基","金丹","元婴","化神","合体","大乘","渡劫"][m.realm||0];
+              return `
+                <div class="sm-row${m.isLeader?' leader':''}">
+                  <img src="assets/portraits/${m.portrait}.jpg" onerror="this.style.background='#3a2820'" />
+                  <div class="sm-info">
+                    <div class="sm-name">${m.name} ${m.isLeader?'<span class="sm-tag">★ 帮主</span>':''}</div>
+                    <div class="sm-realm">${realmName} 期</div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      ` : ''}
+      <div class="modal-row" style="margin-top:14px;gap:8px">
         <button class="btn ghost" id="btn-back-map">← 回 地 图</button>
+        ${me ? '' : '<button class="btn primary" id="btn-fight-sect">⚔ 入 阵 论 道</button>'}
       </div>
     `);
     document.getElementById("btn-back-map").onclick = () => openSects();
+    const fbtn = document.getElementById("btn-fight-sect");
+    if(fbtn){ fbtn.onclick = ()=>{ Modal.close(); if(typeof Battle!=='undefined') Battle.openPrep ? Battle.openPrep(s.id) : Battle.openHub(); }; }
   }
 
   // —— 宗门等级面板 ——
@@ -211,10 +233,15 @@ const World = (() => {
         </ul>
       </div>` : ""}
 
-      <div class="modal-row" style="margin-top:18px">
+      <div class="modal-row" style="margin-top:18px;gap:8px">
+        <button class="btn primary" id="btn-open-battle-hub">⚔ 江 湖 论 道</button>
         <button class="btn ghost" data-act="modal-close">嗯 →</button>
       </div>
     `);
+    setTimeout(()=>{
+      const b = document.getElementById("btn-open-battle-hub");
+      if(b) b.onclick = ()=>{ Modal.close(); if(typeof Battle!=='undefined') Battle.openHub(); };
+    }, 0);
   }
 
   return { openSects, openSectStatus };
