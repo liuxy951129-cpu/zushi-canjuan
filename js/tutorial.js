@@ -122,6 +122,8 @@ const Tutorial = (() => {
 
   function start(){
     if(G.state?.flags?.tut_done) return;
+    // 清残留
+    document.getElementById("tutorial-layer")?.remove();
     active = true;
     idx = 0;
     document.body.classList.add("tut-on");
@@ -132,10 +134,12 @@ const Tutorial = (() => {
   function buildUI(){
     overlay = document.createElement("div");
     overlay.id = "tutorial-layer";
+    overlay.style.opacity = "0"; // 先隐藏，showStep 后再显示
+    overlay.style.transition = "opacity .4s";
     overlay.innerHTML = `
       <div id="tut-mask"></div>
       <div id="tut-spotlight"></div>
-      <div id="tut-bubble">
+      <div id="tut-bubble" style="visibility:hidden">
         <div id="tut-port"></div>
         <div class="tut-body">
           <div class="tut-name">祖 师</div>
@@ -157,6 +161,10 @@ const Tutorial = (() => {
   function showStep(){
     const step = STEPS[idx];
     if(!step){ finish(); return; }
+    // 第一次 showStep 时让 overlay & bubble 渐显（避免空闪）
+    if(overlay){ overlay.style.opacity = "1"; }
+    const bubble = document.getElementById("tut-bubble");
+    if(bubble){ bubble.style.visibility = "visible"; }
     const txt = step.textFn ? step.textFn() : step.text;
     typeText(document.getElementById("tut-text"), txt);
     placeBubble(step);

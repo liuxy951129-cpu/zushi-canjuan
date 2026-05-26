@@ -315,7 +315,7 @@ body.tut-on #task-floater{display:none}
 /* ================================================================
    祖师堂主屏
    ================================================================ */
-#screen-hall{padding-top:62px}
+#screen-hall{padding-top:62px;padding-bottom:110px;overflow:hidden}
 .hall-bg{
   position:absolute;inset:0;z-index:0;
   background:url(../assets/scenes/sc_temple.jpg) center/cover no-repeat;
@@ -324,17 +324,20 @@ body.tut-on #task-floater{display:none}
 .hall-overlay{
   position:absolute;inset:0;z-index:1;pointer-events:none;
   background:
-    linear-gradient(180deg, rgba(6,4,10,.6) 0%, transparent 25%, transparent 65%, rgba(6,4,10,.85) 100%),
+    linear-gradient(180deg, rgba(6,4,10,.6) 0%, transparent 25%, transparent 55%, rgba(6,4,10,.92) 88%, rgba(6,4,10,.98) 100%),
     radial-gradient(ellipse at 50% 35%, transparent 30%, rgba(6,4,10,.75) 90%);
 }
 
 .disciples-row{
   position:relative;z-index:5;
-  flex:1;
-  display:flex;align-items:flex-end;justify-content:center;gap:24px;padding:50px 30px 0;flex-wrap:wrap;
+  flex:1;min-height:0;
+  display:flex;align-items:flex-end;justify-content:center;gap:24px;
+  padding:50px 30px 0;
+  flex-wrap:wrap;
+  overflow:hidden;
 }
 .disciple-fig{
-  position:relative;width:170px;cursor:pointer;
+  position:relative;width:150px;cursor:pointer;
   animation:floatBreathe 4s ease-in-out infinite;
   transition:transform .3s var(--tap), filter .3s;
 }
@@ -343,7 +346,7 @@ body.tut-on #task-floater{display:none}
 @keyframes floatBreathe{50%{transform:translateY(-4px)}}
 .disciple-fig:hover{transform:translateY(-8px) scale(1.04);filter:drop-shadow(0 0 12px var(--gold-glow))}
 .df-portrait{
-  width:170px;height:230px;border-radius:3px;
+  width:150px;height:200px;border-radius:3px;
   background:#0a0608 center/cover;
   border:1.5px solid var(--gold);
   box-shadow:0 0 0 3px var(--bg-0), 0 0 0 4px rgba(201,163,90,.4), 0 8px 28px rgba(0,0,0,.7);
@@ -415,19 +418,21 @@ body.tut-on #task-floater{display:none}
   margin:0 0 6px}
 .altar-quote{margin:6px 0 0;color:var(--ink-2);font-family:"Long Cang",serif;font-size:18px;letter-spacing:.1em}
 
-/* 操作栏 */
+/* 操作栏 · 固定屏底，永远可见 */
 .action-bar{
-  position:relative;z-index:6;
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
   display:flex;justify-content:center;align-items:center;gap:8px;
-  padding:14px 16px;height:78px;
-  background:linear-gradient(180deg, rgba(10,6,10,.4) 0%, rgba(10,6,10,.92) 50%);
+  padding:18px 16px 12px;min-height:96px;
+  background:linear-gradient(180deg, rgba(10,6,10,.2) 0%, rgba(10,6,10,.96) 35%, rgba(10,6,10,1) 100%);
   border-top:1px solid var(--line);
+  backdrop-filter:blur(2px);
 }
-.ab-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px;min-width:80px;color:var(--ink-2);
-  border-radius:2px;transition:all .25s var(--tap)}
+.ab-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 12px;min-width:74px;color:var(--ink-2);
+  border-radius:2px;transition:all .25s var(--tap);background:transparent;border:none;cursor:pointer;font-family:inherit}
 .ab-btn:hover{transform:translateY(-2px)}
+.ab-l{font-family:"Ma Shan Zheng";font-size:12px;color:var(--gold-2);letter-spacing:.18em;line-height:1.4}
 .ab-i{
-  width:46px;height:46px;display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
   font-family:"Ma Shan Zheng";font-size:22px;
   background:linear-gradient(180deg, rgba(60,30,30,.9), rgba(20,10,12,.95));
   border:1.5px solid var(--gold);
@@ -448,7 +453,6 @@ body.tut-on #task-floater{display:none}
   animation:abPulse 2.4s ease-in-out infinite;
 }
 @keyframes abPulse{50%{box-shadow:0 0 0 2px var(--bg-0), 0 0 0 3px var(--gold-2), 0 10px 28px rgba(168,50,54,.85),inset 0 0 18px rgba(255,180,80,.45)}}
-.ab-l{font-size:11px;letter-spacing:.2em;color:var(--ink-2);font-family:"Ma Shan Zheng"}
 .ab-btn.primary .ab-l{color:var(--gold-2);font-weight:700}
 
 /* ================================================================
@@ -870,7 +874,7 @@ body.immersive-on { overflow:hidden }
    ================================================================ */
 #tutorial-layer{position:fixed;inset:0;z-index:1000;pointer-events:none}
 #tut-mask{position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:auto;transition:opacity .3s}
-#tutorial-layer.has-spotlight #tut-mask{display:none} /* spotlight 模式：用 spotlight 自身的 box-shadow 当遮罩，mask 不挡点击 */
+#tutorial-layer.has-spotlight #tut-mask{display:none}
 #tut-spotlight{
   position:absolute;border:2px solid var(--gold);border-radius:6px;display:none;
   box-shadow:0 0 0 9999px rgba(0,0,0,.6), 0 0 24px rgba(255,200,120,.7);
