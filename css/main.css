@@ -789,3 +789,21 @@ body.immersive-on { overflow:hidden }
   cursor:pointer;
 }
 #tut-next:hover{filter:brightness(1.2)}
+
+/* ================================================================
+   招募卡
+   ================================================================ */
+.rec-card{
+  position:relative;background:linear-gradient(180deg, rgba(40,24,28,.92), rgba(12,8,12,.97));
+  border:1.5px solid var(--gold);padding:0 0 12px;
+  box-shadow:0 0 0 2px var(--bg-0),0 0 0 3px rgba(201,163,90,.4);
+  display:flex;flex-direction:column;
+}
+.rec-card::before{content:"";position:absolute;inset:4px;border:1px dashed rgba(201,163,90,.25);pointer-events:none}
+.rec-pic{height:200px;background-size:cover;background-position:center top;border-bottom:1px solid var(--gold)}
+.rec-name{font-family:"Ma Shan Zheng";font-size:18px;color:var(--gold-2);text-align:center;letter-spacing:.18em;margin:8px 0 4px}
+.rec-arch{font-size:11px;color:var(--candle);letter-spacing:.16em;text-align:center;font-family:"Ma Shan Zheng";margin-bottom:6px}
+.rec-stats{font-size:11px;color:var(--ink-3);text-align:center;letter-spacing:.06em;padding:4px 8px}
+.rec-bio{padding:6px 14px;font-size:11px;color:var(--ink-2);line-height:1.7;flex:1;letter-spacing:.04em}
+.rec-cost{padding:6px 14px;text-align:center;font-family:"Ma Shan Zheng";letter-spacing:.18em;color:var(--candle)}
+.rec-btn{margin:6px 14px}

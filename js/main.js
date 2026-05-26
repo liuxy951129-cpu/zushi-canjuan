@@ -189,6 +189,7 @@ const Main = (() => {
       else if(a==="modal-close") Modal.close();
       else if(a==="back-hall"){ showScreen("screen-hall"); Disciples.renderHall(); updateAltar(); }
       else if(a==="dispatch"){ showScreen("screen-dispatch"); Dispatch.render(); }
+      else if(a==="recruit"){ Recruit.open(); }
       else if(a==="cultivate"){ showScreen("screen-cultivate"); renderCultivate(); }
       else if(a==="build"){ showScreen("screen-build"); Build.render(); }
       else if(a==="story"){ showScreen("screen-story"); Story.renderList(); }

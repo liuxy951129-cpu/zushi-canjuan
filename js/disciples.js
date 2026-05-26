@@ -74,13 +74,16 @@ const Disciples = (() => {
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
             ${canBreak ? `<button class="btn primary" id="btn-breakthrough">▶ 尝 试 突 破</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
             ${d.flags?.locked ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
           </div>
+          ${!d.flags?.locked && d.id !== "master" ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
         </div>
       </div>
     `;
     if(canBreak) document.getElementById("btn-breakthrough").onclick = () => attemptBreakthrough(d);
     const cb = document.getElementById("btn-cultivate"); if(cb) cb.onclick = () => quickCultivate(d);
+    const ib = document.getElementById("btn-interact"); if(ib) ib.onclick = () => Interact.open(d.id);
     const ub = document.getElementById("btn-unlock"); if(ub) ub.onclick = () => {
       if(d.flags.locked && d.id==="master"){ toast("祖师爷只有在 c3s1 后才会出关。", "bad"); return; }
       if(d.id==="heimo" && !G.state.flags.called_heimo && !G.state.flags.heimo_stay){ toast("需先在剧情中触发", "bad"); return; }
