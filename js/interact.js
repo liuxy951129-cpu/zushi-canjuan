@@ -108,6 +108,7 @@ const Interact = (() => {
     if(a.needStone) G.state.stone -= a.needStone;
     const gain = a.gain[0] + Math.floor(Math.random() * (a.gain[1] - a.gain[0] + 1));
     addBond(d.id, gain);
+    if(typeof Tasks !== 'undefined') Tasks.counter('interactCount', 1);
     SFX.play("chime");
 
     // 独立小剧情台词池

@@ -101,7 +101,7 @@ const Disciples = (() => {
         <div class="dd-bonds" style="margin-top:14px">
           <h4>技 能</h4>
           <div id="dd-skill-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(91,138,114,.08);border:1px solid rgba(91,138,114,.3);border-radius:6px;cursor:pointer;transition:all .25s" title="点击查看技能树">
-            <div style="width:48px;height:48px;border-radius:4px;background:linear-gradient(135deg, var(--jade), #2a4a3a);border:1px solid var(--jade);display:flex;align-items:center;justify-content:center;font-family:Ma Shan Zheng;font-size:22px;color:#fff">技</div>
+            <div id="dd-skill-icon" style="width:48px;height:48px;border-radius:4px;background:linear-gradient(135deg, var(--jade), #2a4a3a);border:1px solid var(--jade);display:flex;align-items:center;justify-content:center;font-family:Ma Shan Zheng;font-size:22px;color:#fff;background-size:cover">技</div>
             <div style="flex:1">
               <div style="font-family:Ma Shan Zheng;color:var(--jade);font-size:16px">${d.skill} <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击进入技能树 ▸</span></div>
               <div style="font-size:11px;color:var(--ink-3);margin-top:2px" id="dd-skill-summary">— 加载中 —</div>
@@ -139,11 +139,19 @@ const Disciples = (() => {
     // 技能卡点击 → 技能树
     const sc = document.getElementById("dd-skill-cell");
     if(sc && typeof Skills !== 'undefined') sc.onclick = () => Skills.openTree(d.id);
-    // 技能摘要
+    // 技能摘要 + AI icon
     const sum = document.getElementById("dd-skill-summary");
     if(sum && typeof Skills !== 'undefined'){
       const st = Skills.summary(d.id);
       sum.textContent = `已点亮 ${st.unlocked}/${st.total} · 已装配 ${st.equipped}/3`;
+      // AI icon
+      const main = Skills.getMainTree(d.id);
+      const iconEl = document.getElementById("dd-skill-icon");
+      if(main && iconEl){
+        const file = main.isSignature ? ("sk_sig_" + d.id + ".png") : ("sk_" + main.key + ".png");
+        iconEl.style.backgroundImage = "url(assets/icons/" + file + ")";
+        iconEl.textContent = "";
+      }
     }
     const ub = document.getElementById("btn-unlock"); if(ub) ub.onclick = () => {
       if(d.flags.locked && d.id==="master"){ toast("祖师爷只有在 c3s1 后才会出关。", "bad"); return; }
@@ -176,6 +184,7 @@ const Disciples = (() => {
     d.exp += gain;
     SFX.play("chime");
     toast(`${d.name} 修为 +${gain}`, "good");
+    if(typeof Tasks !== 'undefined') Tasks.counter('cultivateCount', 1);
     Save.persist();
     Main.updateHUD();
     openDetail(d.id);
@@ -195,7 +204,10 @@ const Disciples = (() => {
         const k = STATS[Math.floor(Math.random()*STATS.length)];
         d.stats[k]++;
         SFX.play("up");
-        if(typeof Tasks !== 'undefined') Tasks.mark('t_first_breakthrough');
+        if(typeof Tasks !== 'undefined'){
+          Tasks.mark('t_first_breakthrough');
+          Tasks.counter('breakCount', 1);
+        }
         toast(`${d.name} 突破至 ${REALMS[d.realm]}！`, "good");
         Modal.openHTML(`
           <h3>境 界 突 破</h3>

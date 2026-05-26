@@ -179,6 +179,14 @@ const Skills = (() => {
 
   const STAT_ABBR = { root:"根", wit:"悟", mind:"心", spirit:"灵", luck:"运" };
 
+  // 树 → AI icon 文件
+  function treeIcon(treeKey){
+    if(treeKey && treeKey.indexOf("sig_") === 0){
+      return "sk_sig_" + treeKey.slice(4) + ".png";
+    }
+    return "sk_" + treeKey + ".png";
+  }
+
   function openTree(disId){
     const d = G.state.disciples.find(function(x){return x.id===disId;});
     if(!d) return;
@@ -207,7 +215,9 @@ const Skills = (() => {
           'transition:all .25s;',
           isEq ? ('box-shadow:0 0 18px ' + elemColor + ',inset 0 0 12px ' + elemColor + '44') : '',
           '">',
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">',
+          '<div style="display:flex;gap:12px;align-items:flex-start">',
+          // 左：AI icon
+          '<div style="width:48px;height:48px;flex-shrink:0;border-radius:6px;background:url(assets/icons/' + treeIcon(cur.key) + ') center/cover #1a1310;border:1.5px solid ' + (unlocked?elemColor:'rgba(122,107,88,.4)') + ';' + (unlocked?'':'filter:grayscale(.7) brightness(.5);') + '"></div>',
           '<div style="flex:1">',
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">',
           '<span style="font-size:11px;font-family:Ma Shan Zheng;color:' + elemColor + ';letter-spacing:.05em;padding:2px 6px;border:1px solid ' + elemColor + ';border-radius:3px">第 ' + (leaf.tier+1) + ' 阶</span>',
@@ -216,10 +226,7 @@ const Skills = (() => {
           '</div>',
           '<div style="font-size:12px;color:' + (unlocked ? 'var(--ink-1)' : 'var(--ink-3)') + ';margin-top:6px;letter-spacing:.05em">' + leaf.effect + '</div>',
           '<div style="font-size:11px;color:var(--ink-3);font-style:italic;margin-top:6px;letter-spacing:.04em">「' + leaf.lore.replace(/\n/g,'<br>') + '」</div>',
-          '</div>',
-          '<div style="text-align:right;flex-shrink:0">',
-          '<div style="font-size:10px;color:var(--ink-3);letter-spacing:.05em">条件</div>',
-          '<div style="font-size:11px;color:' + (unlocked ? 'var(--jade)' : 'var(--vermilion-2)') + ';font-family:Ma Shan Zheng;letter-spacing:.06em">' + reqText + '</div>',
+          '<div style="font-size:11px;color:' + (unlocked ? 'var(--jade)' : 'var(--vermilion-2)') + ';font-family:Ma Shan Zheng;letter-spacing:.06em;margin-top:4px">条件：' + reqText + '</div>',
           '</div>',
           '</div>',
           '</div>'

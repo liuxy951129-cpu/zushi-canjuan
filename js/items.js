@@ -218,6 +218,7 @@ const Items = (() => {
     if(!consume(giftId, 1)){ toast("已无此物", "bad"); return; }
     // 更新好感
     Interact.addBond?.(disId, gift.bond || 5);
+    if(typeof Tasks !== 'undefined') Tasks.counter('giftCount', 1);
     SFX?.play?.("chime");
     Modal.openHTML(`
       <h3>赠 ${gift.name}</h3>

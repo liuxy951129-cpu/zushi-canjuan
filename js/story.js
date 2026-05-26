@@ -32,12 +32,13 @@ const Story = (() => {
   function tryAdvance(){
     const next = STORIES.find(s => !G.state.storyDone.includes(s.id) && G.state.day >= s.day);
     if(!next) return;
-    // c1s1 额外门槛：需先完成新手任务前 3 个（强制养成期）
-    if(next.id === "c1s1"){
-      const t = G.state.tasks || {};
-      const passed = [t.t_first_dispatch, t.t_first_build, t.t_visit_world].filter(Boolean).length;
-      if(passed < 3 && G.state.day < 3){
-        return; // 还没攒够，等下一日
+    // 检查前置任务（必须 stage_claimed_xxx 才能触发对应主线）
+    if(typeof Tasks !== 'undefined'){
+      const stage = Tasks.STAGES.find(s => s.gate === next.id);
+      if(stage && !G.state.tasks?.["stage_claimed_" + next.id]){
+        // 前置未完成，提示一下浮窗
+        Tasks.renderFloater();
+        return;
       }
     }
     openImmersive(next);

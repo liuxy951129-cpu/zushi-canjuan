@@ -19,16 +19,15 @@ const Build = (() => {
   };
 
   function render(){
-    const phase = (typeof Weather!=='undefined' && Weather.phase) ? Weather.phase() : 'day';
     const bg = document.getElementById("bmap-bg");
     if(bg){
-      // 优先用 AI 生宗门地图，否则用 courtyard 兜底
-      const dayMap = "assets/scenes/map_sect_day.jpg";
-      const nightMap = "assets/scenes/map_sect_night.jpg";
-      bg.style.backgroundImage = "url('"+(phase==='night'?nightMap:dayMap)+"'), url(assets/scenes/sc_courtyard.jpg)";
+      // 高清地图 + Weather 控制昼夜 filter
+      bg.style.backgroundImage = "url(assets/scenes/hi_map_sect.jpg), url(assets/scenes/map_sect_day.jpg)";
       bg.style.backgroundSize = "cover";
       bg.style.backgroundPosition = "center";
     }
+    // 触发 weather 重新应用 filter
+    if(typeof Weather !== 'undefined' && Weather.apply) Weather.apply();
     const ci = document.getElementById("bmap-coin-info");
     if(ci) ci.textContent = "铜钱：" + (G.state.coin||0);
 

@@ -1,6 +1,6 @@
 /* 存档 */
 const Save = (() => {
-  const KEY = "zsc_save_v5"; // v5: 新手任务浮窗 + 自介修复
+  const KEY = "zsc_save_v6"; // v6: 主线推进任务 + 计数器
   function load(){ try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(G.state)); }catch(e){} }
   function clear(){
@@ -9,6 +9,7 @@ const Save = (() => {
     localStorage.removeItem("zsc_save_v2");
     localStorage.removeItem("zsc_save_v3");
     localStorage.removeItem("zsc_save_v4");
+    localStorage.removeItem("zsc_save_v5");
   }
   function newSave(){
     return {

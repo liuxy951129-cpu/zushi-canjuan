@@ -274,7 +274,7 @@ const BUILDINGS = [
 const STORIES = [
   // ============ 第一章 第一节：地窖之兆 ============
   {
-    id:"c1s1", chapter:1, day:3, title:"地 窖 之 兆",
+    id:"c1s1", chapter:1, day:1, title:"地 窖 之 兆",
     body:"夜深时，祖师堂地窖里传来轻微的窸窣声。",
     quote:"七十年，足够一只蝼蚁成龙，也足够一座宫殿成灰。",
     scenes:[
@@ -311,7 +311,7 @@ const STORIES = [
 
   // ============ 第一章 第二节：大弟子之死 ============
   {
-    id:"c1s2", chapter:1, day:5, title:"血 染 演 武 场",
+    id:"c1s2", chapter:1, day:1, title:"血 染 演 武 场",
     body:"清晨，演武场。陈渊倒在血泊里。",
     quote:"他若死了，下一个就是我们。",
     scenes:[
@@ -351,7 +351,7 @@ const STORIES = [
 
   // ============ 第一章 第三节：雷霆门挑衅 ============
   {
-    id:"c1s3", chapter:1, day:7, title:"雷 霆 门 叫 阵",
+    id:"c1s3", chapter:1, day:2, title:"雷 霆 门 叫 阵",
     body:"雷霆门遣使到山下叫阵。",
     quote:"借？借出去的东西，从不会原样回来。",
     scenes:[
@@ -389,7 +389,7 @@ const STORIES = [
 
   // ============ 第二章 第一节：小雨的笛声 ============
   {
-    id:"c2s1", chapter:2, day:10, title:"藏 经 阁 笛 声",
+    id:"c2s1", chapter:2, day:3, title:"藏 经 阁 笛 声",
     body:"雨夜，藏经阁。",
     quote:"她的灵识，比这门派的任何人都强。",
     scenes:[
@@ -424,7 +424,7 @@ const STORIES = [
 
   // ============ 第二章 第二节：邻派来访 ============
   {
-    id:"c2s2", chapter:2, day:13, title:"落 霞 谷 主 来 访",
+    id:"c2s2", chapter:2, day:4, title:"落 霞 谷 主 来 访",
     body:"落霞谷主清虚老人亲自上山。",
     quote:"江湖上的盟，从来都是单方面的。",
     scenes:[
@@ -457,7 +457,7 @@ const STORIES = [
 
   // ============ 第二章 第三节：渡劫预兆 ============
   {
-    id:"c2s3", chapter:2, day:16, title:"凌 雪 的 血 纹",
+    id:"c2s3", chapter:2, day:5, title:"凌 雪 的 血 纹",
     body:"凌雪在闭关三日后突破至筑基。",
     quote:"每一次突破，都是一次与天争命。",
     scenes:[
@@ -490,7 +490,7 @@ const STORIES = [
 
   // ============ 第三章 第一节：客卿真名 ============
   {
-    id:"c3s1", chapter:3, day:20, title:"客 卿 揭 面",
+    id:"c3s1", chapter:3, day:6, title:"客 卿 揭 面",
     body:"无名出现在你面前，褪下兜帽。",
     quote:"我不是来助你的。我是来告别的。",
     scenes:[

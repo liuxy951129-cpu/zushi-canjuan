@@ -35,13 +35,27 @@ const Weather = (() => {
     if(ti) ti.textContent = (p === "night" ? "🌙" : ICONS[w]);
     if(tt) tt.textContent = (p === "night" ? "戌时" : "辰时") + " · " + WORDS[w];
 
-    // 主屏背景切换
+    // 主屏背景：单张高清图 + CSS filter 切换昼夜
     const bg = document.getElementById("hall-bg");
     if(bg){
-      bg.style.backgroundImage = "url(assets/scenes/sc_temple_"+p+".jpg), url(assets/scenes/sc_temple.jpg)";
+      bg.style.backgroundImage = "url(assets/scenes/hi_sc_temple.jpg), url(assets/scenes/sc_temple.jpg)";
       bg.style.backgroundSize = "cover";
       bg.style.backgroundPosition = "center";
-      bg.style.filter = (p === "night") ? "brightness(.45) saturate(.7)" : "brightness(.85) saturate(.95)";
+      bg.style.filter = (p === "night")
+        ? "brightness(.42) saturate(.55) hue-rotate(-15deg) contrast(1.05)"
+        : "brightness(.95) saturate(1.05) contrast(1.02)";
+      bg.style.transition = "filter 1.2s ease";
+    }
+    // 山门地图也同步切换
+    const bmap = document.getElementById("bmap-bg");
+    if(bmap){
+      bmap.style.backgroundImage = "url(assets/scenes/hi_map_sect.jpg), url(assets/scenes/map_sect_day.jpg)";
+      bmap.style.backgroundSize = "cover";
+      bmap.style.backgroundPosition = "center";
+      bmap.style.filter = (p === "night")
+        ? "brightness(.4) saturate(.6) hue-rotate(-20deg)"
+        : "brightness(.95) saturate(1.05)";
+      bmap.style.transition = "filter 1.2s ease";
     }
 
     // 特效粒子

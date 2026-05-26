@@ -173,9 +173,11 @@ const Dispatch = (() => {
       SFX.play("chime");
       G.state.flags = G.state.flags || {};
       G.state.flags.tut_dispatched = true;
-      G.state.flags.investigated_yard = true; // 任意派遣均算「曾遣弟子查访」
-      // 标记新手任务
-      if(typeof Tasks !== 'undefined') Tasks.mark('t_first_dispatch');
+      G.state.flags.investigated_yard = true;
+      if(typeof Tasks !== 'undefined'){
+        Tasks.mark('t_first_dispatch');
+        Tasks.counter('dispatchCount', 1);
+      }
       Save.persist();
       Main.updateHUD();
       Disciples.renderHall();
@@ -183,47 +185,118 @@ const Dispatch = (() => {
     };
   }
 
+  // 派遣分类报告台词（按 tag + success/fail）
+  function reportLine(d, q, success, special){
+    const TAG_LINES = {
+      "采药": {
+        ok: [
+          `「掌门，这一筐紫茎草——\n东山潮湿，根上都还带着泥。\n夜里下了场雨，我们抢在第二日清晨挖的，怕被山猪拱了。」`,
+          `「弟子按图索骥，多采了一倍。\n半路遇见个老药农，他说见我们手稳，又赠了几粒灵草籽。」`,
+        ],
+        fail: [`「……这趟空手了。\n东山那片药圃被人捷足先登。\n看脚印，不是本派的人。」`],
+      },
+      "护镖": {
+        ok: [
+          `「镖押到了。\n落霞谷外那道关卡盘问得紧，但见着本派的剑就放行了。\n看来「残墟门」三字还能镇住几个人。」`,
+          `「半路遇上拦路的散修，三招便打发了。\n他临走丢下一句「七十年劫」——\n掌门，江湖里这话现在传得很广。」`,
+        ],
+        fail: [`「镖丢了。\n（${d.name} 抱拳低头）\n弟子甘领责罚。」`],
+      },
+      "灭妖": {
+        ok: [
+          `「狼患平了。\n那群妖兽窝在西林深处，咬死了七户人家的牲口。\n弟子一剑封了头狼的喉。」`,
+          `「妖已斩。\n但林中还有更深的气息——\n像是有更大的东西，在远处看着我。」`,
+        ],
+        fail: [`「妖兽比预想凶。\n弟子腿上挨了一爪，所幸性命无虞。\n（${d.name} 卷起裤管，露出一道未愈的血痕）」`],
+      },
+      "谈判": {
+        ok: [
+          `「对方收了礼，应了。\n清虚老人还托我转告掌门——\n说本派"骨头硬，但底子薄"。\n他建议先修丹房。」`,
+          `「事成了。\n但席间他试探了三次残卷的事——\n弟子一概以"不知"应之。」`,
+        ],
+        fail: [`「不欢而散。\n对方根本没想真谈，他要的，是看我们的虚实。」`],
+      },
+      "探秘": {
+        ok: [
+          `「古墓深处有一座石碑。\n碑上的字……与祖师堂地窖那卷上的笔迹相同。\n（${d.name} 把拓本递上）」`,
+          `「探到了。\n但我在里面看见一具未腐的尸体——\n他穿的是本派三百年前的旧袍。」`,
+        ],
+        fail: [`「不行了，那地方有东西。\n我们没敢深入，先退回来禀报。」`],
+      },
+      "宗门战": {
+        ok: [`「赢了！\n（${d.name} 满身是血，但眼睛发亮）\n雷霆门那位二弟子认栽了，我留了他一命。\n但这梁子，是结下了。」`],
+        fail: [`「败了……\n（${d.name} 单膝跪地）\n弟子负伤而退。\n请掌门责罚。」`],
+      },
+    };
+    const block = TAG_LINES[q.tag] || TAG_LINES["采药"];
+    const arr = success ? block.ok : block.fail;
+    let line = arr[Math.floor(Math.random()*arr.length)];
+    if(special) line = line + "\n\n（" + special + "）";
+    return line;
+  }
+
   function settle(p){
     const q = DISPATCHES.find(x => x.id===p.dispatchId);
     if(!q) return;
     const team = G.state.disciples.filter(d => p.disciples.includes(d.id));
-    // 成功率：基于队伍资质 vs 难度
+    if(team.length === 0) return;
     const teamPower = team.reduce((s,d) => s + (d.stats.root + d.stats.spirit + d.stats.mind) * (d.realm + 1), 0);
     const required = q.diff * 30;
     let successRate = Math.min(0.95, Math.max(0.15, teamPower / required * 0.6 + 0.2));
     if(G.state.buildLv.dantang >= 3) successRate += 0.05;
     const success = Math.random() < successRate;
-    let bodyHtml = `<div class="lead">${team.map(d=>d.name).join(" · ")} ${success?"凯旋而归":"狼狈而回"}</div>`;
+
+    // 奖励/惩罚结算
+    let specialNote = "";
+    let rewardLines = [];
     if(success){
       const r = q.rewards;
-      // 派遣 stone 字段实际入铜钱（修为靠 exp）
-      if(r.stone) G.state.coin = (G.state.coin||0) + r.stone;
-      if(r.herb) G.state.herb += r.herb;
-      if(r.pill) G.state.pill = (G.state.pill||0) + r.pill;
-      if(r.scroll) G.state.scroll = (G.state.scroll||0) + r.scroll;
-      if(r.rep) G.state.rep += r.rep;
-      if(r.exp) team.forEach(d => { d.exp += Math.floor(r.exp / team.length); });
-      if(r.recruitChance && Math.random() < r.recruitChance) tryRecruit();
-      if(r.mindBoost) team.forEach(d => d.stats.mind += 1);
+      if(r.stone){ G.state.coin = (G.state.coin||0) + r.stone; rewardLines.push("+ " + r.stone + " 铜钱"); }
+      if(r.herb){ G.state.herb += r.herb; rewardLines.push("+ " + r.herb + " 药材"); }
+      if(r.pill){ G.state.pill = (G.state.pill||0) + r.pill; rewardLines.push("+ " + r.pill + " 丹药"); }
+      if(r.scroll){ G.state.scroll = (G.state.scroll||0) + r.scroll; rewardLines.push("+ " + r.scroll + " 卷轴"); }
+      if(r.rep){ G.state.rep += r.rep; rewardLines.push("+ " + r.rep + " 声望"); }
+      if(r.exp){ team.forEach(d => { d.exp += Math.floor(r.exp / team.length); }); rewardLines.push("全队 + " + Math.floor(r.exp/team.length) + " 修为"); }
+      if(r.recruitChance && Math.random() < r.recruitChance){ tryRecruit(); specialNote = "途中收得一名散修，已入门下。"; }
+      if(r.mindBoost){ team.forEach(d => d.stats.mind += 1); specialNote = (specialNote ? specialNote+"  " : "") + "心境 +1。"; }
       if(q.storyFlag) G.state.flags[q.storyFlag] = true;
-      bodyHtml += `<div class="quote">${rewardSummary(r)}</div>`;
       SFX.play("up");
     } else {
-      // 受伤
       if(Math.random() < (q.riskHurt||0.3)){
         const victim = team[Math.floor(Math.random()*team.length)];
         if(victim){
           victim.life -= 5;
           victim.exp = Math.floor(victim.exp * 0.7);
-          bodyHtml += `<div class="quote">${victim.name} 受伤，寿元 -5。</div>`;
-          if(victim.life <= 0){ victim.flags.dead = true; bodyHtml += `<div class="lead" style="color:var(--vermilion-2)">${victim.name} 伤重不治，殒于路上。</div>`; }
+          specialNote = victim.name + " 寿元 -5，修为略损。";
+          if(victim.life <= 0){
+            victim.flags.dead = true;
+            specialNote = victim.name + " 伤重不治，殒于路上。";
+          }
         }
-      } else {
-        bodyHtml += `<div class="quote">无功而返，但无大碍。</div>`;
       }
       SFX.play("bad");
     }
-    Modal.openHTML(`<h3>派遣归来 · ${q.name}</h3>${bodyHtml}<div class="modal-row"><button class="btn primary" data-act="modal-close">合 上 册 子</button></div>`);
+
+    // 第一视角剧情 modal
+    const speaker = team[0];
+    const line = reportLine(speaker, q, success, specialNote);
+    Save.persist();
+    Main.updateHUD();
+
+    // 用沉浸式剧情 modal（speaker 立绘 + 对白 + 奖励行）
+    Modal.openHTML(
+      '<div style="display:grid;grid-template-columns:130px 1fr;gap:18px;align-items:center;margin-bottom:14px">' +
+        '<div style="width:130px;height:170px;border-radius:6px;background:url(assets/portraits/'+speaker.pic+'.jpg) center/cover #1a1310;border:1.5px solid '+(success?'var(--gold)':'var(--vermilion)')+';box-shadow:0 0 16px '+(success?'rgba(201,163,90,.45)':'rgba(168,50,54,.45)')+'"></div>' +
+        '<div>' +
+          '<h3 style="margin:0 0 4px 0;color:'+(success?'var(--gold-2)':'var(--vermilion-2)')+'">' + q.name + ' · ' + (success?'凯旋':'败归') + '</h3>' +
+          '<div style="font-size:11px;color:var(--ink-3);letter-spacing:.18em;margin-bottom:8px">' + speaker.name + ' · ' + q.tag + ' · 难度 ' + q.diff + '</div>' +
+          '<div style="font-size:11px;color:var(--candle);font-family:Ma Shan Zheng;letter-spacing:.12em">— ' + (success?'第一视角报告':'败归交差') + ' —</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="lead" style="white-space:pre-line;font-size:14px;line-height:2;text-align:left;border-left:2px solid '+(success?'var(--gold)':'var(--vermilion)')+';padding-left:18px;color:var(--ink-1);font-style:normal">'+line+'</div>' +
+      (rewardLines.length ? '<div style="margin-top:14px;padding:10px;background:rgba(91,138,114,.1);border:1px solid var(--jade);border-radius:4px"><div style="font-size:11px;color:var(--jade);font-family:Ma Shan Zheng;letter-spacing:.18em;margin-bottom:6px">所 得</div>'+rewardLines.map(l => '<div style="font-size:13px;color:var(--gold-2);font-family:Ma Shan Zheng;letter-spacing:.05em">'+l+'</div>').join('')+'</div>' : '') +
+      '<div class="modal-row" style="margin-top:16px"><button class="btn primary" data-act="modal-close">嗯，知道了 →</button></div>'
+    );
   }
 
   function tryRecruit(){

@@ -95,7 +95,7 @@ const Main = (() => {
     document.getElementById("hud-pill").textContent = G.state.pill;
     document.getElementById("hud-disc").textContent = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden && !d.flags?.locked).length;
     document.getElementById("hud-rep").textContent = repName(G.state.rep);
-    // 新手任务浮窗也刷新
+    // 任务可领取角标
     if(typeof Tasks !== 'undefined' && Tasks.renderFloater) Tasks.renderFloater();
   }
   function repName(rep){
@@ -132,11 +132,15 @@ const Main = (() => {
           Save.persist();
           setTimeout(() => {
             Story.playIntroSeries(["chenyuan","lingxue"], () => {
-              setTimeout(() => Tasks.renderFloater(), 600);
+              setTimeout(() => {
+                Tasks.renderFloater();
+                Story.tryAdvance(); // 尝试触发主线（被 task gate 拦则只显示浮窗）
+              }, 600);
             });
           }, 600);
         } else {
           Tasks.renderFloater();
+          Story.tryAdvance();
         }
       }
     }, 800);
