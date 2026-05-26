@@ -1,49 +1,174 @@
-/* 主线 */
+/* ================================================================
+   主线 · 沉浸式剧情模式
+   - 自动触发：到当天第一次进入大堂时强制全屏触发
+   - 逐字显现 + 背景图切换 + 立绘居中 + 选项浮现
+   - 已通过的剧情可在「主线」回看
+   - 未触发的显示 ???，给模糊触发条件提示
+   ================================================================ */
 const Story = (() => {
-  function tryAdvance(){
-    const next = STORIES.find(s => !G.state.storyDone.includes(s.id) && G.state.day >= s.day);
-    if(next) open(next);
+
+  // 每节剧情的"沉浸式"扩展：背景图 + 立绘 + 多段
+  // 兼容老格式：若 STORIES 节点没有 scenes 字段，则降级为单段
+  function getScenes(node){
+    if(node.scenes && node.scenes.length) return node.scenes;
+    // 默认单段：speakerPic + body + quote
+    const speakerPic = pickPic(node);
+    const bg = pickBg(node);
+    return [
+      { bg, speaker: speakerPic, name: speakerName(node), text: node.body, quote: node.quote || "" }
+    ];
+  }
+  function pickPic(node){
+    return ({c1s1:"d_master",c1s2:"d_chenyuan",c1s3:"d_shixiong",c2s1:"d_xiaoyu",c2s2:"d_master",c2s3:"d_lingxue",c3s1:"d_heimo"})[node.id] || "d_master";
+  }
+  function speakerName(node){
+    const map = {c1s1:"祖师",c1s2:"周破军",c1s3:"凌霜",c2s1:"沈小雨",c2s2:"清虚老人",c2s3:"凌雪",c3s1:"无名"};
+    return map[node.id] || "—";
+  }
+  function pickBg(node){
+    return ({c1s1:"sc_temple",c1s2:"sc_battle",c1s3:"sc_courtyard",c2s1:"sc_temple",c2s2:"sc_courtyard",c2s3:"sc_dantang",c3s1:"sc_temple"})[node.id] || "sc_temple";
   }
 
-  function open(node){
-    const speakerPic = node.id==="c1s1" ? "d_master" : node.id==="c1s2" ? "d_chenyuan" : node.id==="c1s3" ? "d_shixiong" : node.id==="c2s1" ? "d_xiaoyu" : node.id==="c2s2" ? "d_master" : node.id==="c2s3" ? "d_lingxue" : "d_heimo";
-    Modal.openHTML(`
-      <div style="display:flex;gap:18px;align-items:flex-start;margin-bottom:14px">
-        <div style="width:120px;height:160px;flex-shrink:0;background:url(assets/portraits/${speakerPic}.jpg) center/cover;border:1.5px solid var(--gold);box-shadow:0 0 0 2px var(--bg-0), 0 0 0 3px var(--gold-3)"></div>
-        <div style="flex:1">
-          <div style="display:inline-block;padding:3px 10px;background:var(--vermilion);color:var(--gold-2);font-family:Ma Shan Zheng;font-size:12px;letter-spacing:.2em;margin-bottom:6px">第 ${node.chapter} 章 · 第 ${STORIES.findIndex(s=>s.id===node.id)+1} 节</div>
-          <h3 style="text-align:left;margin:4px 0 8px;font-family:Ma Shan Zheng;font-size:24px;letter-spacing:.18em;background:linear-gradient(180deg,#f4dba6,#c9a35a);-webkit-background-clip:text;background-clip:text;color:transparent">${node.title}</h3>
-          <div style="color:var(--ink);line-height:1.95;font-size:14px;letter-spacing:.04em;white-space:pre-line">${node.body}</div>
-        </div>
+  function tryAdvance(){
+    const next = STORIES.find(s => !G.state.storyDone.includes(s.id) && G.state.day >= s.day);
+    if(next) openImmersive(next);
+  }
+
+  // —— 沉浸式播放 ——
+  function openImmersive(node){
+    const scenes = getScenes(node);
+    let idx = 0;
+
+    // 全屏覆盖容器
+    document.body.classList.add("immersive-on");
+    let overlay = document.getElementById("immersive");
+    if(!overlay){
+      overlay = document.createElement("div");
+      overlay.id = "immersive";
+      document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+      <div class="im-bg"></div>
+      <div class="im-vignette"></div>
+      <div class="im-portrait" id="im-portrait"></div>
+      <div class="im-frame">
+        <div class="im-tag" id="im-tag">第 ${node.chapter} 章 · 第 ${STORIES.findIndex(s=>s.id===node.id)+1} 节</div>
+        <h2 id="im-title">${node.title}</h2>
+        <div class="im-name" id="im-name"></div>
+        <div class="im-text" id="im-text"></div>
+        <div class="im-quote" id="im-quote"></div>
+        <div class="im-choices" id="im-choices"></div>
+        <div class="im-next" id="im-next">▾ 点 击 继 续</div>
       </div>
-      ${node.quote ? `<div class="quote" style="text-align:center">${node.quote}</div>` : ""}
-      <div class="modal-row" id="story-choices" style="flex-direction:column;align-items:stretch;gap:10px"></div>
-    `);
-    const row = document.getElementById("story-choices");
-    node.choices.forEach(c => {
-      const btn = document.createElement("button");
-      btn.className = "choice-btn";
-      btn.innerHTML = `<b>${c.label}</b><span>${c.b||""}</span>${c.requirePill?`<div class="hint">需 ${c.requirePill} 丹药</div>`:""}`;
-      if(c.requirePill && (G.state.pill||0) < c.requirePill) btn.style.opacity = .55;
-      btn.onclick = () => {
-        if(c.requirePill && (G.state.pill||0) < c.requirePill){ toast("丹药不足", "bad"); return; }
-        applyChoice(c.r||{});
-        G.state.storyDone.push(node.id);
-        Modal.close();
-        Save.persist();
-        Main.updateHUD();
-        // 更新祖师堂的中央事件
-        Main.updateAltar(node);
-        SFX.play("chime");
-      };
-      row.appendChild(btn);
-    });
+    `;
+    overlay.classList.add("active");
+    SFX.play("bell");
+
+    let typing = false, cancelType = false;
+    function showScene(i){
+      const sc = scenes[i];
+      // 切换背景
+      const bg = overlay.querySelector(".im-bg");
+      bg.style.backgroundImage = `url(assets/scenes/${sc.bg||pickBg(node)}.jpg)`;
+      // 立绘
+      const port = document.getElementById("im-portrait");
+      port.style.backgroundImage = `url(assets/portraits/${sc.speaker||pickPic(node)}.jpg)`;
+      port.classList.remove("im-fade-in"); void port.offsetWidth; port.classList.add("im-fade-in");
+      // 名字
+      document.getElementById("im-name").textContent = sc.name || speakerName(node);
+      // 文本逐字
+      const textEl = document.getElementById("im-text");
+      const text = sc.text || "";
+      typeText(textEl, text, () => {
+        // 逐字结束后显示 quote 与 next
+        const q = document.getElementById("im-quote");
+        if(sc.quote){ q.textContent = sc.quote; q.classList.add("show"); }
+        else { q.textContent = ""; q.classList.remove("show"); }
+        // 最后一段：显示选项；中间段：显示"点击继续"
+        if(i === scenes.length - 1){
+          showChoices();
+        } else {
+          document.getElementById("im-next").style.display = "";
+        }
+      });
+    }
+    function typeText(el, text, done){
+      typing = true; cancelType = false;
+      el.innerHTML = "";
+      el.classList.add("typing");
+      const arr = [...text];
+      let pos = 0;
+      function step(){
+        if(cancelType){
+          el.innerHTML = text.replace(/\n/g, "<br>");
+          typing = false;
+          done && done();
+          return;
+        }
+        if(pos >= arr.length){
+          typing = false;
+          el.classList.remove("typing");
+          done && done();
+          return;
+        }
+        const ch = arr[pos++];
+        if(ch === "\n") el.innerHTML += "<br>";
+        else el.innerHTML += ch;
+        setTimeout(step, ch === "\n" ? 200 : 38);
+      }
+      step();
+    }
+    function showChoices(){
+      document.getElementById("im-next").style.display = "none";
+      const cont = document.getElementById("im-choices");
+      cont.innerHTML = "";
+      // 调查式分支由阶段 2 实现；阶段 1 仍走原 choices 但加上"沉浸"包装
+      node.choices.forEach(c => {
+        const btn = document.createElement("button");
+        btn.className = "im-choice";
+        btn.innerHTML = `<b>${c.label}</b><span>${c.b||""}</span>${c.requirePill?`<div class="hint">需 ${c.requirePill} 丹药</div>`:""}`;
+        if(c.requirePill && (G.state.pill||0) < c.requirePill) btn.classList.add("disabled");
+        btn.onclick = () => {
+          if(c.requirePill && (G.state.pill||0) < c.requirePill){ toast("丹药不足", "bad"); return; }
+          applyChoice(c.r||{});
+          G.state.storyDone.push(node.id);
+          Save.persist();
+          Main.updateHUD();
+          closeImmersive();
+          SFX.play("chime");
+          Main.updateAltar();
+        };
+        cont.appendChild(btn);
+      });
+      cont.classList.add("show");
+    }
+
+    // 整个 overlay 点击：跳过打字 / 进入下一段
+    overlay.onclick = (ev) => {
+      if(ev.target.closest(".im-choice")) return;
+      if(typing){ cancelType = true; return; }
+      if(idx < scenes.length - 1){
+        idx++;
+        document.getElementById("im-next").style.display = "none";
+        document.getElementById("im-quote").classList.remove("show");
+        showScene(idx);
+      }
+    };
+
+    showScene(0);
+  }
+
+  function closeImmersive(){
+    const ov = document.getElementById("immersive");
+    if(!ov) return;
+    ov.classList.remove("active");
+    document.body.classList.remove("immersive-on");
+    setTimeout(() => { ov.remove(); }, 600);
   }
 
   function applyChoice(r){
     if(r.flag) G.state.flags[r.flag] = true;
     if(r.exp){
-      // 大弟子加经验，否则给所有人
       G.state.disciples.forEach(d => { if(!d.flags?.dead && !d.flags?.locked) d.exp += Math.floor(r.exp / G.state.disciples.length); });
     }
     if(r.rep) G.state.rep += r.rep;
@@ -59,32 +184,68 @@ const Story = (() => {
     }
   }
 
+  // —— 主线列表（已通过 + 模糊提示 ???）——
   function renderList(){
     const wrap = document.getElementById("story-wrap");
     wrap.innerHTML = "";
-    STORIES.forEach(s => {
+    STORIES.forEach((s, i) => {
       const done = G.state.storyDone.includes(s.id);
       const reachable = G.state.day >= s.day;
       const card = document.createElement("div");
-      card.className = "story-card" + (!done && !reachable ? " locked" : "");
-      card.innerHTML = `
-        <div class="story-tag ${done?'tag-finished':''}">第 ${s.chapter} 章 · 第 ${STORIES.indexOf(s)+1} 节</div>
-        <h3>${s.title}</h3>
-        <div class="body">${(done||reachable)?s.body:"（尚未到达）"}</div>
-        ${(done||reachable)&&s.quote ? `<div class="quote">${s.quote}</div>` : ""}
-        <div class="story-actions">
-          ${done ? `<span style="color:var(--jade);letter-spacing:.2em">✓ 已 抉 择</span>`
-                 : reachable ? `<button class="btn primary" data-open="${s.id}">推 进 剧 情</button>`
-                 : `<span style="color:var(--ink-3);letter-spacing:.18em">第 ${s.day} 日 触 发</span>`}
-        </div>
-      `;
+      card.className = "story-card" + (!done ? " locked" : "");
+
+      if(done){
+        card.innerHTML = `
+          <div class="story-tag tag-finished">第 ${s.chapter} 章 · 第 ${i+1} 节</div>
+          <h3>${s.title}</h3>
+          <div class="body">${s.body.replace(/\n/g,"<br>")}</div>
+          ${s.quote ? `<div class="quote">${s.quote}</div>` : ""}
+          <div class="story-actions">
+            <span style="color:var(--jade);letter-spacing:.2em">✓ 已 历 经</span>
+            <button class="btn ghost" data-replay="${s.id}">⥁ 重 阅</button>
+          </div>
+        `;
+      } else {
+        // 未触发：???
+        const hint = hintFor(s, reachable);
+        card.innerHTML = `
+          <div class="story-tag" style="background:var(--ink-4)">第 ${s.chapter} 章 · ???</div>
+          <h3 style="font-family:'Ma Shan Zheng';color:var(--ink-3);letter-spacing:.4em">— ？ ？ ？ —</h3>
+          <div class="body" style="color:var(--ink-3);font-style:italic">${hint}</div>
+          <div class="story-actions">
+            <span style="color:var(--ink-3);letter-spacing:.18em;font-size:11px">${reachable?"未 探 寻":"未 至 时 日"}</span>
+          </div>
+        `;
+      }
       wrap.appendChild(card);
     });
-    wrap.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => {
-      const node = STORIES.find(s => s.id === b.dataset.open);
-      if(node) open(node);
+    wrap.querySelectorAll("[data-replay]").forEach(b => b.addEventListener("click", () => {
+      const node = STORIES.find(s => s.id === b.dataset.replay);
+      if(node){
+        // 重阅：临时移出 storyDone 以触发，但不应用 effect
+        replay(node);
+      }
     }));
   }
 
-  return { tryAdvance, open, renderList };
+  function hintFor(s, reachable){
+    if(!reachable) return `传闻 · 第 ${s.day} 日前后将有大事。`;
+    return ({
+      c1s1: "传闻 · 祖师堂地窖 · 夜半有声。",
+      c1s2: "传闻 · 大弟子近日寝食不安，演武场可有蹊跷？",
+      c1s3: "传闻 · 雷霆门遣使叩门 · 须有应敌之力。",
+      c2s1: "传闻 · 藏经阁深处 · 有人闻得笛声。",
+      c2s2: "传闻 · 落霞谷主似有心结盟。",
+      c2s3: "传闻 · 凌雪闭关已三日 · 血纹将现。",
+      c3s1: "传闻 · 客卿无名隐瞒身份 · 真名将露。",
+    })[s.id] || "传闻 · 时机未至。";
+  }
+
+  function replay(node){
+    // 暂存 / 进入沉浸 / 完成不重复应用
+    const fakeNode = { ...node, choices: [{ label:"合 上 卷 轴", b:"", r:{} }] };
+    openImmersive(fakeNode);
+  }
+
+  return { tryAdvance, open: openImmersive, renderList, closeImmersive };
 })();
