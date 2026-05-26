@@ -7,6 +7,8 @@ function showScreen(id){
   const hud = document.getElementById("hud");
   if(id==="screen-title") hud.classList.add("hidden");
   else hud.classList.remove("hidden");
+  // 应用天气与昼夜
+  if(typeof Weather !== 'undefined' && G.state) Weather.apply();
 }
 
 function toast(msg, kind){
@@ -151,6 +153,8 @@ const Main = (() => {
   }
 
   function endDay(){
+    // 入定 → 切夜
+    Weather.setNight(true);
     // 处理派遣
     Disciples.settleDispatches();
     G.state.day++;
@@ -173,9 +177,14 @@ const Main = (() => {
       <h3>入 定 · 第 ${G.state.day-1} 日 终</h3>
       <div class="lead">月落参横，烛火将熄。<br>明日 · 第 ${G.state.day} 日 · 灵田收 <b>${lt*10}</b> 灵石 + <b>${lt*30}</b> 铜钱</div>
       <div class="quote">「一日苦修，胜千日空想。」</div>
-      <div class="modal-row"><button class="btn primary" data-act="modal-close">推 开 殿 门</button></div>
+      <div class="modal-row"><button class="btn primary" id="btn-wakeup">推 开 殿 门 · 第二日</button></div>
     `);
-    setTimeout(() => Story.tryAdvance(), 800);
+    document.getElementById("btn-wakeup").onclick = () => {
+      Modal.close();
+      // 切回白天
+      Weather.setNight(false);
+      setTimeout(() => Story.tryAdvance(), 400);
+    };
   }
 
   function updateAltar(node){

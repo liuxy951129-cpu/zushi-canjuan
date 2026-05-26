@@ -221,6 +221,52 @@ body.tut-on #task-floater{display:none}
 /* 派遣分类侧栏 */
 .disp-cat:hover{transform:translateX(3px);filter:brightness(1.15)}
 
+/* 修缮 · 山门地图 */
+#screen-build{padding-bottom:20px}
+.build-map-wrap{
+  position:relative;flex:1;margin:14px 24px;border:1.5px solid var(--gold);border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 0 0 2px var(--bg-0), 0 14px 36px rgba(0,0,0,.7);
+}
+.bmap-bg{position:absolute;inset:0;background:#1a1310;background-size:cover;background-position:center;filter:brightness(.85)}
+.bmap-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,.55) 100%);pointer-events:none}
+.bmap-building:hover .bm-frame{transform:scale(1.08);filter:brightness(1.2) !important}
+.bmap-building.unbuilt:hover .bm-frame{filter:grayscale(.4) brightness(.7) !important}
+@keyframes bmPulse{50%{filter:brightness(1.15)}}
+.bmap-building.built .bm-frame{animation:bmPulse 3s ease-in-out infinite}
+
+/* 时辰指示器 */
+#time-indicator{
+  position:fixed;top:72px;right:24px;z-index:40;
+  padding:8px 14px;background:linear-gradient(135deg,rgba(30,20,18,.92),rgba(15,8,12,.96));
+  border:1px solid var(--gold);border-radius:20px;
+  display:flex;align-items:center;gap:8px;
+  font-family:"Ma Shan Zheng";letter-spacing:.12em;
+  box-shadow:0 4px 14px rgba(0,0,0,.5);
+  pointer-events:none;
+}
+#ti-icon{font-size:18px;color:var(--candle);text-shadow:0 0 8px var(--candle)}
+#ti-text{font-size:13px;color:var(--gold-2)}
+body.tut-on #time-indicator,body.immersive-on #time-indicator{display:none}
+
+/* 天气特效层 */
+#weather-layer{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}
+.weather-rain{
+  position:absolute;width:1.5px;background:linear-gradient(180deg,transparent,rgba(170,200,230,.65));
+  animation:rainFall linear infinite;
+}
+@keyframes rainFall{from{transform:translateY(-100px)}to{transform:translateY(110vh)}}
+.weather-snow{
+  position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.85);
+  box-shadow:0 0 6px rgba(255,255,255,.7);
+  animation:snowFall linear infinite;
+}
+@keyframes snowFall{
+  0%{transform:translate(0,-50px) rotate(0)}
+  100%{transform:translate(var(--dx,40px),110vh) rotate(360deg)}
+}
+.weather-night-overlay{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, rgba(20,30,60,0) 30%, rgba(8,12,30,.45) 100%);pointer-events:none}
+
 /* 世界地图 pin */
 .sect-marker:hover .sm-pin{transform:scale(1.2)}
 .sm-pin{transition:transform .25s}
@@ -388,6 +434,15 @@ body.tut-on #task-floater{display:none}
   position:absolute;left:-12px;right:-12px;bottom:-12px;top:-12px;
   background:radial-gradient(ellipse at 50% 65%, rgba(255,180,80,.18), transparent 60%);
   pointer-events:none;border-radius:50%;
+}
+.df-act{
+  position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+  font-family:"Long Cang", serif;font-size:13px;color:var(--candle);
+  background:rgba(10,6,8,.85);border:1px solid var(--candle);
+  padding:1px 9px;letter-spacing:.18em;border-radius:10px;
+  text-shadow:0 0 6px var(--candle);
+  white-space:nowrap;z-index:3;
+  box-shadow:0 0 8px rgba(255,200,120,.3);
 }
 
 /* 祖师牌位（中央） */

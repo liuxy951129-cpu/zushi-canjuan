@@ -5,22 +5,40 @@ const Disciples = (() => {
 
   function picSrc(pic){ return `assets/portraits/${pic}.jpg`; }
 
+  // 弟子日常活动（根据弟子 id + 当前 day 决定，确定性，让用户感受到弟子在做不同的事）
+  const ACTIVITIES = {
+    chenyuan: ["执剑", "守山", "练剑", "巡夜", "对月"],
+    lingxue:  ["抚琴", "煎药", "翻书", "对镜", "凝霜"],
+    shixiong: ["磨刀", "练拳", "饮酒", "踏石", "斩柳"],
+    xiaoyu:   ["吹笛", "听风", "扫叶", "看月", "抚云"],
+    heimo:    ["闭目", "焚香", "独酌", "默坐", "沉吟"],
+    master:   ["闭关", "入定", "炼气", "守炉", "观心"],
+  };
+  function activityOf(d){
+    if(d.flags?.locked) return "封印";
+    if(isBusy(d.id)) return "出门";
+    if(d.exp >= (REALM_EXP[d.realm]||99999)) return "悟道·待破";
+    const list = ACTIVITIES[d.id] || ["静修", "默坐", "练功", "悟道", "守山"];
+    return list[(G.state.day + (d.id||"").length) % list.length];
+  }
+
   function renderHall(){
     const row = document.getElementById("disciples-row");
     row.innerHTML = "";
-    // 隐藏 hidden 弟子（剧情未解锁），dead/left 也不显示
     const alive = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden);
     alive.forEach(d => {
       const fig = document.createElement("div");
       fig.className = "disciple-fig";
       fig.dataset.id = d.id;
       const busy = isBusy(d.id);
+      const activity = activityOf(d);
       fig.innerHTML = `
         <div class="df-aura"></div>
         <div class="df-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
         ${busy ? `<div class="df-state" title="出门历练">遣</div>` : (d.flags?.locked ? `<div class="df-state" style="background:#3a3128">封</div>` : "")}
         <div class="df-realm">${REALMS[d.realm]}</div>
         <div class="df-name">${d.name}</div>
+        <div class="df-act">${activity}</div>
       `;
       fig.addEventListener("click", () => openDetail(d.id));
       row.appendChild(fig);

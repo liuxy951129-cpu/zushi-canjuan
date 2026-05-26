@@ -69,16 +69,25 @@
       <button class="btn ghost" data-act="open-store">⚯ 仙 缘 阁</button>
       <button class="btn ghost" data-act="open-settings">⚙ 设 置</button>
     </div>
-    <p class="title-credit">v1.00 · 一日一造 · 暗黑武侠仙侠</p>
+    <p class="title-credit">v1.02 · 一日一造 · 暗黑武侠仙侠</p>
   </div>
 </section>
 
 <!-- 大堂（祖师堂） -->
 <section id="screen-hall" class="screen">
-  <div class="hall-bg"></div>
-  <div class="hall-overlay"></div>
+  <div class="hall-bg" id="hall-bg"></div>
+  <div class="hall-overlay" id="hall-overlay"></div>
 
-  <!-- 弟子站位（左/中/右 多列） -->
+  <!-- 天气特效层（公共，可被各场景使用） -->
+  <div id="weather-layer"></div>
+
+  <!-- 时辰指示（右上） -->
+  <div id="time-indicator">
+    <span id="ti-icon">☀</span>
+    <span id="ti-text">辰时 · 晴</span>
+  </div>
+
+  <!-- 弟子站位 -->
   <div class="disciples-row" id="disciples-row"></div>
 
   <!-- 中央祖师牌位/事件 -->
@@ -120,14 +129,19 @@
   <div class="dispatch-grid" id="dispatch-grid"></div>
 </section>
 
-<!-- 修缮 -->
+<!-- 修缮 · 宗门地图 -->
 <section id="screen-build" class="screen">
   <header class="topbar">
     <button class="back" data-act="back-hall">← 回祖师堂</button>
-    <h2>宗 门 · 修 缮</h2>
-    <div></div>
+    <h2>宗 门 · 山 门 地 图</h2>
+    <div id="bmap-coin-info" style="font-size:12px;color:var(--candle);font-family:Ma Shan Zheng;letter-spacing:.1em"></div>
   </header>
-  <div class="build-grid" id="build-grid"></div>
+  <div class="build-map-wrap" id="build-map-wrap">
+    <div class="bmap-bg" id="bmap-bg"></div>
+    <div class="bmap-overlay"></div>
+    <div id="bmap-buildings"></div>
+    <div id="bmap-tooltip" style="display:none"></div>
+  </div>
 </section>
 
 <!-- 闭关（修炼） -->
@@ -200,6 +214,7 @@
 <script src="js/data.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/save.js"></script>
+<script src="js/weather.js"></script>
 <script src="js/tutorial.js"></script>
 <script src="js/items.js"></script>
 <script src="js/world.js"></script>
