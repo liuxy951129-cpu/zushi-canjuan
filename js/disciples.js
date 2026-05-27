@@ -122,6 +122,7 @@ const Disciples = (() => {
             ${!d.flags?.locked && !isBusy(d.id) ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-gift">⌧ 赠 礼</button>` : ""}
+            ${d.id === "master" && !d.flags?.locked ? `<button class="btn ghost" id="btn-canjuan">⌘ 阅 · 祖 师 残 卷</button>` : ""}
             ${d.flags?.locked ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
           </div>
           ${!d.flags?.locked && d.id !== "master" ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
@@ -133,6 +134,8 @@ const Disciples = (() => {
     const cb = document.getElementById("btn-cultivate"); if(cb) cb.onclick = () => quickCultivate(d);
     const ib = document.getElementById("btn-interact"); if(ib) ib.onclick = () => Interact.open(d.id);
     const gb = document.getElementById("btn-gift"); if(gb) gb.onclick = () => Items.openGiftPicker(d.id);
+    const cj = document.getElementById("btn-canjuan");
+    if(cj && typeof Canjuan !== 'undefined') cj.onclick = () => Canjuan.open();
     // 武器卡点击 → 武器库换装
     const wc = document.getElementById("dd-weapon-cell");
     if(wc) wc.onclick = () => { if(typeof Items !== 'undefined') Items.openWeaponPicker(d.id); };

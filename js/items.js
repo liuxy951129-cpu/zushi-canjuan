@@ -87,6 +87,7 @@ const Items = (() => {
       </div>
       <div class="modal-row" style="margin-top:18px">
         ${useable && c > 0 ? `<button class="btn primary" id="btn-use-it">${it.type==='pill'?'服 用':'选 弟 子 赠 与'}</button>` : ""}
+        ${id === "sc_canjuan" ? `<button class="btn primary" id="btn-read-canjuan">⌘ 阅 · 解 读 残 卷</button>` : ""}
         <button class="btn ghost" data-act="modal-close">放 回</button>
       </div>
     `);
@@ -96,6 +97,8 @@ const Items = (() => {
         else openGiftPicker(null, id);
       };
     }
+    const cj = document.getElementById("btn-read-canjuan");
+    if(cj && typeof Canjuan !== 'undefined') cj.onclick = () => Canjuan.open();
   }
 
   // 服丹：选弟子
