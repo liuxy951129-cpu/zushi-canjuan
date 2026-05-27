@@ -1227,3 +1227,297 @@ body.immersive-on { overflow:hidden }
   .cj-runes{ grid-template-columns:repeat(5, 1fr); }
   .cj-form-name{ font-size:24px; }
 }
+
+/* ============ 玩家(掌门) 自修面板 ============ */
+.player-card{
+  display:flex; gap:14px; align-items:center;
+  padding:14px;
+  background:linear-gradient(135deg, rgba(40,28,18,.95), rgba(20,12,8,.98));
+  border:2px solid var(--gold);
+  border-radius:8px;
+  box-shadow:0 0 24px rgba(201,163,90,.25), inset 0 0 12px rgba(201,163,90,.08);
+}
+.player-portrait{
+  width:80px; height:80px; flex-shrink:0;
+}
+.player-info{ flex:1; min-width:0; }
+.player-name{
+  font-family:Ma Shan Zheng;
+  color:var(--gold-2);
+  font-size:22px;
+  letter-spacing:.18em;
+  text-shadow:0 0 8px var(--gold);
+}
+.player-meta{
+  font-size:11px; color:var(--ink-3);
+  letter-spacing:.06em;
+  margin:4px 0 8px 0;
+}
+.player-meta b{ color:var(--candle); font-family:Ma Shan Zheng; }
+.player-exp-bar{
+  position:relative;
+  height:14px;
+  background:rgba(0,0,0,.5);
+  border:1px solid var(--gold);
+  border-radius:7px;
+  overflow:hidden;
+}
+.player-exp-fill{
+  height:100%;
+  background:linear-gradient(90deg, var(--gold), var(--candle));
+  transition:width .4s ease;
+}
+.player-exp-bar span{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:#fff;
+  text-shadow:0 0 4px #000, 1px 1px 2px #000;
+  letter-spacing:.05em;
+}
+
+.player-section{ margin-top:14px; }
+.player-h4{
+  font-family:Ma Shan Zheng;
+  color:var(--gold-2);
+  letter-spacing:.18em;
+  margin:0 0 8px 0;
+  font-size:14px;
+}
+.player-h4-sub{
+  font-family:'PingFang SC',sans-serif;
+  font-size:10px; color:var(--ink-3);
+  letter-spacing:.05em; margin-left:8px;
+  font-weight:normal;
+}
+
+.player-stats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+.ps-stat{
+  text-align:center;
+  padding:8px 4px;
+  background:rgba(20,15,12,.7);
+  border:1px solid var(--line);
+  border-radius:4px;
+}
+.ps-stat .l{ display:block; font-size:11px; color:var(--ink-3); letter-spacing:.05em; }
+.ps-stat .v{
+  display:block;
+  font-family:Ma Shan Zheng;
+  color:var(--candle);
+  font-size:22px;
+  margin-top:2px;
+}
+
+.player-elem-row{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:6px;
+}
+.player-elem-btn{
+  padding:10px 6px;
+  background:rgba(20,15,12,.7);
+  border:1.5px solid var(--line);
+  color:var(--ink-2);
+  cursor:pointer;
+  border-radius:5px;
+  font-family:Ma Shan Zheng;
+  letter-spacing:.16em;
+  font-size:13px;
+  transition:all .15s;
+}
+.player-elem-btn:hover{ border-color:var(--gold); color:var(--gold-2); }
+.player-elem-btn.on{
+  background:linear-gradient(135deg, var(--gold), var(--candle));
+  color:#1a1310;
+  border-color:var(--gold-2);
+  box-shadow:0 0 12px rgba(201,163,90,.5);
+}
+
+.player-weapon{
+  display:flex; gap:12px; align-items:center;
+  padding:10px;
+  background:rgba(201,163,90,.06);
+  border:1px solid rgba(201,163,90,.3);
+  border-radius:6px;
+  cursor:pointer;
+  transition:all .25s;
+}
+.player-weapon:hover{ border-color:var(--gold); background:rgba(201,163,90,.12); }
+.player-weapon.empty{ justify-content:center; padding:18px; color:var(--ink-3); font-style:italic; }
+.pw-icon{
+  width:48px; height:48px;
+  background-size:cover;
+  background-color:#1a1310;
+  border:1px solid var(--gold);
+  border-radius:4px;
+}
+.pw-info{ flex:1; min-width:0; }
+.pw-name{
+  font-family:Ma Shan Zheng;
+  color:var(--gold-2);
+  font-size:16px;
+}
+.pw-tip{
+  font-size:11px; color:var(--candle);
+  font-family:'PingFang SC',sans-serif;
+  letter-spacing:.05em;
+  margin-left:6px;
+}
+.pw-stat{
+  font-size:11px; color:var(--ink-3);
+  margin-top:2px;
+}
+
+.player-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.player-actions .btn{ flex:1; min-width:140px; }
+.btn-sub{
+  display:block;
+  font-size:10px; color:var(--ink-3);
+  font-family:'PingFang SC',sans-serif;
+  letter-spacing:.05em;
+  font-weight:normal;
+  margin-top:2px;
+}
+.player-actions .btn.primary .btn-sub,
+.player-actions .btn.ghost .btn-sub{ color:rgba(255,255,255,.6); }
+
+/* —— 武器选择 —— */
+.pw-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+  gap:8px;
+  max-height:50vh;
+  overflow-y:auto;
+}
+.pw-pick{
+  position:relative;
+  display:flex; gap:8px;
+  padding:8px;
+  background:rgba(20,15,12,.7);
+  border:1.5px solid var(--line);
+  border-radius:5px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.pw-pick:hover{ border-color:var(--gold); }
+.pw-pick.sel{ border-color:var(--gold-2); background:rgba(201,163,90,.15); }
+.pw-pick-icon{
+  width:48px; height:48px;
+  background-size:cover;
+  background-color:#1a1310;
+  border:1px solid var(--gold);
+  border-radius:3px;
+  flex-shrink:0;
+}
+.pw-pick-info{ flex:1; min-width:0; }
+.pw-pick-name{ font-family:Ma Shan Zheng; color:var(--gold-2); font-size:14px; letter-spacing:.1em; }
+.pw-pick-stat{ font-size:11px; color:var(--candle); margin:2px 0; }
+.pw-pick-ability{ font-size:10px; color:var(--ink-3); line-height:1.5; }
+.pw-pick-mark{
+  position:absolute; top:6px; right:6px;
+  width:20px; height:20px;
+  background:var(--gold); color:#1a1310;
+  font-family:Ma Shan Zheng;
+  font-size:11px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%;
+}
+
+/* —— 玩家技能树 —— */
+.ps-tree{ display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto; }
+.ps-group{
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:8px;
+  background:rgba(20,15,12,.5);
+}
+.ps-group.main{
+  border-color:var(--gold);
+  background:rgba(201,163,90,.08);
+}
+.ps-group-h{
+  font-family:Ma Shan Zheng;
+  color:var(--gold-2);
+  letter-spacing:.16em;
+  margin:0 0 6px 0;
+  font-size:13px;
+  display:flex; align-items:center; gap:8px;
+}
+.ps-group-main{
+  font-family:'PingFang SC',sans-serif;
+  font-size:10px;
+  background:linear-gradient(135deg, var(--gold), var(--candle));
+  color:#1a1310;
+  padding:1px 6px;
+  border-radius:3px;
+  letter-spacing:.1em;
+}
+.ps-leaves{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+  gap:6px;
+}
+.ps-leaf{
+  padding:8px;
+  background:rgba(0,0,0,.3);
+  border:1.5px solid var(--line);
+  border-radius:5px;
+  cursor:pointer;
+  transition:all .15s;
+  opacity:.5;
+}
+.ps-leaf.avail{ opacity:1; border-color:var(--candle); }
+.ps-leaf.on{ opacity:1; border-color:var(--jade); background:rgba(91,138,114,.15); }
+.ps-leaf.eq{ border-color:var(--gold-2); background:rgba(201,163,90,.18); box-shadow:0 0 12px rgba(201,163,90,.3); }
+.ps-leaf:hover:not(.lock){ transform:translateY(-1px); }
+.ps-leaf-name{ font-family:Ma Shan Zheng; color:var(--gold-2); font-size:14px; letter-spacing:.1em; }
+.ps-leaf-eq{
+  font-family:'PingFang SC',sans-serif;
+  font-size:10px;
+  background:var(--gold-2); color:#1a1310;
+  padding:1px 5px; margin-left:4px;
+  border-radius:2px;
+  letter-spacing:.1em;
+}
+.ps-leaf-req{ font-size:10px; color:var(--ink-3); margin:3px 0; }
+.ps-leaf-eff{ font-size:11px; color:var(--ink-2); line-height:1.5; }
+.ps-equipped{
+  margin-top:8px;
+  padding:8px 12px;
+  background:rgba(201,163,90,.08);
+  border:1px solid var(--gold);
+  border-radius:5px;
+  font-size:12px;
+  color:var(--ink-2);
+  letter-spacing:.05em;
+}
+
+/* —— 备战名单：玩家行 —— */
+.our-row.is-player{
+  border-left:3px solid var(--gold-2);
+  background:linear-gradient(90deg, rgba(201,163,90,.15), rgba(20,15,12,.6));
+}
+.our-row.is-player.sel{
+  background:linear-gradient(90deg, rgba(201,163,90,.3), rgba(50,38,20,.8));
+  box-shadow:inset 0 0 12px rgba(201,163,90,.4);
+}
+.our-player-icon{
+  width:44px; height:54px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--gold);
+  border-radius:3px;
+  background:#1a1310;
+}
+.our-master-tag{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 6px;
+  background:linear-gradient(135deg, var(--gold), var(--candle));
+  color:#1a1310;
+  font-size:9px;
+  border-radius:2px;
+  letter-spacing:.1em;
+}

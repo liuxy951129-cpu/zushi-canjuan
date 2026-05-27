@@ -122,12 +122,11 @@ const Battle = (() => {
 
     const ourList = ours.map(d=>{
       const sel = selected.includes(d.id);
-      const isMaster = d.id === "chenyuan";
       return `
-        <div class="our-row ${sel?'sel':''}${isMaster?' is-master':''}" data-did="${d.id}">
+        <div class="our-row ${sel?'sel':''}" data-did="${d.id}">
           <img src="assets/portraits/${d.pic}.jpg" />
           <div class="our-row-info">
-            <div class="our-row-name">${d.name} ${isMaster?'<span class="our-master-tag">★ 掌门</span>':''} <span class="our-row-realm">${realmText(d.realm)}</span></div>
+            <div class="our-row-name">${d.name} <span class="our-row-realm">${realmText(d.realm)}</span></div>
             <div class="our-row-bar">
               <div class="orb-tag">根 ${d.stats.root}</div>
               <div class="orb-tag">智 ${d.stats.wit}</div>
@@ -137,6 +136,31 @@ const Battle = (() => {
           <div class="our-check">${sel?"✓":""}</div>
         </div>`;
     }).join("");
+
+    // —— 玩家（掌门）独立加在最上 ——
+    const player = (typeof Player !== 'undefined') ? Player.get() : null;
+    const playerSelected = selected.includes("_player");
+    const playerRow = player ? `
+      <div class="our-row is-player ${playerSelected?'sel':''}" data-did="_player">
+        <div class="our-player-icon">
+          <svg viewBox="0 0 60 60" style="width:100%;height:100%">
+            <defs><radialGradient id="pgrad2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#c9a35a"/><stop offset="100%" stop-color="#3a2820"/></radialGradient></defs>
+            <circle cx="30" cy="30" r="28" fill="url(#pgrad2)" stroke="#c9a35a" stroke-width="1.5"/>
+            <text x="30" y="40" text-anchor="middle" font-family="Ma Shan Zheng" font-size="28" fill="#1a1310">掌</text>
+          </svg>
+        </div>
+        <div class="our-row-info">
+          <div class="our-row-name">${player.name} · ${player.title} <span class="our-master-tag">★ 玩家</span> <span class="our-row-realm">${realmText(player.realm)}</span></div>
+          <div class="our-row-bar">
+            <div class="orb-tag">根 ${player.stats.root}</div>
+            <div class="orb-tag">智 ${player.stats.wit}</div>
+            <div class="orb-tag">神 ${player.stats.spirit}</div>
+            <div class="orb-tag" style="background:rgba(201,163,90,.2);color:var(--gold-2);border-color:var(--gold)">${player.element==='metal'?'金':player.element==='wood'?'木':player.element==='water'?'水':player.element==='fire'?'火':'土'}</div>
+          </div>
+        </div>
+        <div class="our-check">${playerSelected?"✓":""}</div>
+      </div>
+    ` : '';
 
     Modal.openHTML(`
       <h3 style="margin:0;text-align:center">备 战 · ${sect.name}</h3>
@@ -151,7 +175,7 @@ const Battle = (() => {
         </div>
         <div class="prep-col">
           <h4 class="prep-h4">我 · 残 墟 门 <span class="prep-sub">已选 <b id="sel-count">${selected.length}</b> / <b id="sel-max">${mode==='1v1'?1:3}</b></span></h4>
-          <div class="our-list" id="our-list">${ourList}</div>
+          <div class="our-list" id="our-list">${playerRow}${ourList}</div>
         </div>
       </div>
       <div class="modal-row" style="margin-top:12px;justify-content:flex-end;gap:8px">
@@ -212,7 +236,10 @@ const Battle = (() => {
   // —— 战斗开始 ——
   function startBattle(sid, mode, ourTeamIds){
     const sect = ENEMY_SECTS[sid];
-    const ours = ourTeamIds.map(id => G.state.disciples.find(d=>d.id===id));
+    const ours = ourTeamIds.map(id => {
+      if(id === "_player" && typeof Player !== 'undefined') return Player.asBattleUnit();
+      return G.state.disciples.find(d=>d.id===id);
+    }).filter(Boolean);
 
     // 敌方根据 mode 取人：1v1 → 帮主；3v3 → 帮主 + 2 长老
     let enemies = [];
@@ -227,17 +254,30 @@ const Battle = (() => {
     // 包装战斗单位
     function pack(unit, side){
       const isOurs = side === "ally";
-      const battleSkills = isOurs ? mapDiscipleBattleSkills(unit) : unit.skills;
+      const isPlayer = !!unit.isPlayer;
+      // 玩家技能：从装配的 skillEquipped 映射 + 默认平A/调息
+      let battleSkills;
+      if(isPlayer){
+        battleSkills = ["bs_pingA", ...mapPlayerBattleSkills(unit), "bs_recover"];
+      } else if(isOurs){
+        battleSkills = mapDiscipleBattleSkills(unit);
+      } else {
+        battleSkills = unit.skills;
+      }
       const ds = deriveBattleStats(unit);
+      const portrait = isPlayer
+        ? "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><defs><radialGradient id='g'><stop offset='0%' stop-color='%23c9a35a'/><stop offset='100%' stop-color='%233a2820'/></radialGradient></defs><circle cx='40' cy='40' r='38' fill='url(%23g)' stroke='%23c9a35a' stroke-width='1.5'/><text x='40' y='52' text-anchor='middle' font-family='Ma Shan Zheng' font-size='40' fill='%231a1310'>掌</text></svg>"
+        : (isOurs ? `assets/portraits/${unit.pic}.jpg` : `assets/portraits/${unit.portrait}.jpg`);
       return {
         side,
         id: unit.id,
         name: unit.name,
         title: unit.title || "",
         isLeader: !!unit.isLeader,
-        portrait: isOurs ? `assets/portraits/${unit.pic}.jpg` : `assets/portraits/${unit.portrait}.jpg`,
+        isPlayer,
+        portrait,
         realm: unit.realm,
-        element: (isOurs ? (Skills?.getMainTree?.(unit.id)?.tree?.element || "metal") : unit.element),
+        element: (isPlayer ? unit.element : (isOurs ? (Skills?.getMainTree?.(unit.id)?.tree?.element || "metal") : unit.element)),
         stats: unit.stats,
         skills: battleSkills,
         hp: ds.maxHp, maxHp: ds.maxHp,
@@ -245,6 +285,25 @@ const Battle = (() => {
         atk: ds.atk, mag: ds.mag, def: ds.def, mdef: ds.mdef, spd: ds.spd,
         buffs: [], dots: [], dead: false,
       };
+    }
+
+    // 玩家技能映射：把 skillEquipped 转为 BATTLE_SKILLS id
+    function mapPlayerBattleSkills(p){
+      // p.skillEquipped 是玩家技能树的 leaf id（pmp1/pmp2/pwm1/pwm2/...）
+      const M = {
+        pmp1:"bs_jin_zhan",  pmp2:"bs_jin_yu",
+        pwm1:"bs_mu_teng",   pwm2:"bs_mu_chunhui",
+        psm1:"bs_shui_jian", psm2:"bs_shui_yun",
+        pfm1:"bs_huo_yan",   pfm2:"bs_huo_yu",
+        ptp1:"bs_tu_jia",    ptp2:"bs_tu_zhen",
+      };
+      const arr = (p.skillEquipped||[]).map(id => M[id]).filter(Boolean);
+      // 没装配 → 给默认元素 1 个
+      if(arr.length === 0){
+        const FALL = { metal:"bs_jin_zhan", wood:"bs_mu_teng", water:"bs_shui_jian", fire:"bs_huo_yan", earth:"bs_tu_chui" };
+        arr.push(FALL[p.element] || "bs_jin_zhan");
+      }
+      return arr;
     }
 
     B = {

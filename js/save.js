@@ -1,6 +1,6 @@
 /* 存档 */
 const Save = (() => {
-  const KEY = "zsc_save_v8"; // v8: 战斗道具
+  const KEY = "zsc_save_v9"; // v9: 玩家(掌门)角色卡
   function load(){ try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(G.state)); }catch(e){} }
   function clear(){
@@ -12,6 +12,7 @@ const Save = (() => {
     localStorage.removeItem("zsc_save_v5");
     localStorage.removeItem("zsc_save_v6");
     localStorage.removeItem("zsc_save_v7");
+    localStorage.removeItem("zsc_save_v8");
   }
   function newSave(){
     return {
@@ -24,6 +25,20 @@ const Save = (() => {
       storyDone: [],
       buildLv: { hall:1, dantang:1, yanwu:0, zangjing:0, lingtian:1 },
       disciples: JSON.parse(JSON.stringify(DISCIPLES_INIT)),
+      // —— 玩家（掌门）角色卡 ——
+      // 玩家 ≠ 任何弟子。这是你自己。
+      player: {
+        title: "掌门",
+        name:  "你",
+        age:   25,
+        realm: 0,
+        exp:   0,
+        stats: { root:7, wit:8, mind:9, spirit:7, luck:6 },
+        element: "metal",     // 默认五行：金（可在自修界面切）
+        weapon: "sw_iron",    // 起步铁剑
+        skillEquipped: [],    // 战斗装配技能（最多 3）
+        skillUnlocked: [],    // 已点亮的技能 leaf id
+      },
       pendingDispatches: [],
       ownedSkins: ["th_classic"],
       passOwned: false,
