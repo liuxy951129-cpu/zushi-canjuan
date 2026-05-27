@@ -67,6 +67,12 @@ const Disciples = (() => {
     const canBreak = d.exp >= expNeeded && !d.flags?.locked;
     // 武器
     const weaponItem = d.weapon ? ITEM(d.weapon) : null;
+    const isMaster = d.id === "master";
+    // 祖师爷只在出关（非 locked）后才显示佩兵
+    const showWeapon = weaponItem && (!isMaster || !d.flags?.locked);
+    // 祖师爷的技能区只展示，不跳技能树（玩家无权改祖师绝技）
+    const showSkillTreeLink = d.skill && !isMaster;
+    const showSkillReadonly = d.skill && isMaster;
     detail.innerHTML = `
       <div class="dd-portrait-wrap">
         <div class="dd-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
@@ -84,20 +90,20 @@ const Disciples = (() => {
           <div class="dd-stat"><span class="l">修为</span><span class="v">${d.exp}/${expNeeded}</span></div>
           <div class="dd-stat"><span class="l">状态</span><span class="v">${isBusy(d.id)?"出门":d.flags?.locked?"封印":"在山"}</span></div>
         </div>
-        ${weaponItem ? `
+        ${showWeapon ? `
         <div class="dd-bonds" style="margin-top:14px">
           <h4>佩 兵</h4>
-          <div id="dd-weapon-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(201,163,90,.06);border:1px solid rgba(201,163,90,.2);border-radius:6px;cursor:pointer;transition:all .25s" title="点击更换武器">
+          <div id="dd-weapon-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(201,163,90,.06);border:1px solid rgba(201,163,90,.2);border-radius:6px;${isMaster?'':'cursor:pointer;'}transition:all .25s" ${isMaster?'':'title="点击更换武器"'}>
             <div style="width:48px;height:48px;border-radius:4px;background:url(assets/icons/${weaponItem.icon}.png) center/cover #1a1310;border:1px solid var(--gold)"></div>
             <div style="flex:1">
-              <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:16px">${weaponItem.name} <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击更换 ▸</span></div>
+              <div style="font-family:Ma Shan Zheng;color:var(--gold-2);font-size:16px">${weaponItem.name}${isMaster?'':' <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击更换 ▸</span>'}</div>
               <div style="font-size:11px;color:var(--ink-3);margin-top:2px">${weaponItem.ability} · 攻 ${weaponItem.atk}</div>
             </div>
           </div>
-          <div style="font-size:10px;color:var(--ink-3);margin-top:6px;letter-spacing:.05em">※ 战斗系统将在下一版开放，眼下武器仅作纪念</div>
+          ${isMaster?'<div style="font-size:10px;color:var(--ink-3);margin-top:6px;letter-spacing:.05em">※ 祖师佩兵不可更替</div>':''}
         </div>
         ` : ""}
-        ${d.skill ? `
+        ${showSkillTreeLink ? `
         <div class="dd-bonds" style="margin-top:14px">
           <h4>技 能</h4>
           <div id="dd-skill-cell" style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:rgba(91,138,114,.08);border:1px solid rgba(91,138,114,.3);border-radius:6px;cursor:pointer;transition:all .25s" title="点击查看技能树">
@@ -105,6 +111,18 @@ const Disciples = (() => {
             <div style="flex:1">
               <div style="font-family:Ma Shan Zheng;color:var(--jade);font-size:16px">${d.skill} <span style="font-size:11px;color:var(--candle);font-family:inherit;letter-spacing:.05em;margin-left:6px">点击进入技能树 ▸</span></div>
               <div style="font-size:11px;color:var(--ink-3);margin-top:2px" id="dd-skill-summary">— 加载中 —</div>
+            </div>
+          </div>
+        </div>
+        ` : ""}
+        ${showSkillReadonly ? `
+        <div class="dd-bonds" style="margin-top:14px">
+          <h4>绝 技</h4>
+          <div style="display:flex;gap:12px;align-items:center;margin-top:8px;padding:10px;background:linear-gradient(135deg, rgba(168,50,54,.15), rgba(168,50,54,.05));border:1px solid #a83236;border-radius:6px">
+            <div style="width:48px;height:48px;border-radius:4px;background:linear-gradient(135deg, #a83236, #6a1f22);border:1px solid #a83236;display:flex;align-items:center;justify-content:center;font-family:Ma Shan Zheng;font-size:22px;color:#fff;text-shadow:0 0 6px #000">绝</div>
+            <div style="flex:1">
+              <div style="font-family:Ma Shan Zheng;color:#ff8060;font-size:16px;letter-spacing:.16em">${d.skill}</div>
+              <div style="font-size:11px;color:var(--ink-3);margin-top:2px;font-style:italic">三百年祖师亲传 · 不可外授</div>
             </div>
           </div>
         </div>
@@ -119,14 +137,15 @@ const Disciples = (() => {
           <h4>行 动</h4>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
             ${canBreak ? `<button class="btn primary" id="btn-breakthrough">▶ 尝 试 突 破</button>` : ""}
-            ${!d.flags?.locked && !isBusy(d.id) ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
-            ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
-            ${!d.flags?.locked && !isBusy(d.id) && d.id !== "master" ? `<button class="btn ghost" id="btn-gift">⌧ 赠 礼</button>` : ""}
-            ${d.id === "master" && !d.flags?.locked ? `<button class="btn ghost" id="btn-canjuan">⌘ 阅 · 祖 师 残 卷</button>` : ""}
-            ${d.flags?.locked ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-gift">⌧ 赠 礼</button>` : ""}
+            ${isMaster ? `<button class="btn primary" id="btn-canjuan">⌘ 翻 阅 · 祖 师 残 卷</button>` : ""}
+            ${d.flags?.locked && !isMaster ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
           </div>
-          ${!d.flags?.locked && d.id !== "master" ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
-          ${d.flags?.locked && d.unlockHint ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">解 锁 提 示 · ${d.unlockHint}</div>` : ""}
+          ${isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em;font-style:italic">${d.flags?.locked ? '※ 祖师爷尚在闭关。但他将残卷托付给你——可随时翻阅。' : '※ 祖师爷已出关。可阅残卷、瞻仰绝技。'}</div>` : ""}
+          ${!d.flags?.locked && !isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
+          ${d.flags?.locked && d.unlockHint && !isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">解 锁 提 示 · ${d.unlockHint}</div>` : ""}
         </div>
       </div>
     `;
@@ -136,9 +155,9 @@ const Disciples = (() => {
     const gb = document.getElementById("btn-gift"); if(gb) gb.onclick = () => Items.openGiftPicker(d.id);
     const cj = document.getElementById("btn-canjuan");
     if(cj && typeof Canjuan !== 'undefined') cj.onclick = () => Canjuan.open();
-    // 武器卡点击 → 武器库换装
+    // 武器卡点击 → 武器库换装（祖师爷除外）
     const wc = document.getElementById("dd-weapon-cell");
-    if(wc) wc.onclick = () => { if(typeof Items !== 'undefined') Items.openWeaponPicker(d.id); };
+    if(wc && !isMaster) wc.onclick = () => { if(typeof Items !== 'undefined') Items.openWeaponPicker(d.id); };
     // 技能卡点击 → 技能树
     const sc = document.getElementById("dd-skill-cell");
     if(sc && typeof Skills !== 'undefined') sc.onclick = () => Skills.openTree(d.id);

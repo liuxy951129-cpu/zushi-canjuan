@@ -1521,3 +1521,80 @@ body.immersive-on { overflow:hidden }
   border-radius:2px;
   letter-spacing:.1em;
 }
+
+/* ============ 残卷揭秘终局 ============ */
+.cj-finale{
+  position:relative;
+  text-align:center;
+  padding:8px 0;
+}
+.cj-finale-burst{
+  position:absolute; inset:0;
+  background:radial-gradient(circle at center, rgba(255,200,100,.3) 0%, transparent 60%);
+  pointer-events:none;
+  animation:cjBurst 3s ease-in-out infinite;
+}
+@keyframes cjBurst{
+  0%,100%{ opacity:.3; transform:scale(1); }
+  50%{ opacity:.7; transform:scale(1.05); }
+}
+.cj-finale-title{
+  font-family:Ma Shan Zheng;
+  font-size:32px;
+  letter-spacing:.4em;
+  color:var(--candle);
+  text-shadow:0 0 20px var(--gold), 0 0 40px var(--candle);
+  margin:6px 0;
+  animation:cjFinaleGlow 2.4s ease-in-out infinite;
+}
+@keyframes cjFinaleGlow{
+  0%,100%{ text-shadow:0 0 20px var(--gold), 0 0 40px var(--candle); }
+  50%{ text-shadow:0 0 30px var(--candle), 0 0 60px var(--gold), 0 0 80px #ff8060; }
+}
+.cj-finale-quote{
+  font-family:Ma Shan Zheng;
+  font-size:20px;
+  color:#ff6660;
+  letter-spacing:.5em;
+  text-shadow:0 0 12px #a83236;
+  margin:14px 0 18px 0;
+}
+.cj-finale-body{
+  text-align:left;
+  font-size:14px;
+  color:var(--ink-1);
+  line-height:2;
+  letter-spacing:.05em;
+  background:rgba(20,15,12,.7);
+  border:1px solid var(--gold);
+  border-radius:6px;
+  padding:14px 18px;
+  margin:0 6px;
+}
+.cj-finale-body p{ margin:0 0 8px 0; }
+.cj-finale-body p:last-child{ margin-bottom:0; }
+.cj-finale-rewards{
+  margin-top:16px;
+  padding:14px;
+  background:linear-gradient(135deg, rgba(201,163,90,.18), rgba(168,50,54,.08));
+  border:2px solid var(--gold-2);
+  border-radius:8px;
+  box-shadow:0 0 24px rgba(201,163,90,.4);
+}
+.cj-finale-rewards h4{
+  font-family:Ma Shan Zheng;
+  color:var(--gold-2);
+  letter-spacing:.3em;
+  margin:0 0 10px 0;
+  font-size:16px;
+  text-shadow:0 0 8px var(--gold);
+}
+.cj-finale-rwd{
+  display:flex; justify-content:space-between;
+  padding:6px 0;
+  font-size:13px;
+  border-bottom:1px dotted var(--line);
+}
+.cj-finale-rwd:last-child{ border-bottom:none; }
+.cj-finale-rwd span{ color:var(--ink-2); letter-spacing:.1em; }
+.cj-finale-rwd b{ font-family:Ma Shan Zheng; color:var(--candle); font-size:18px; letter-spacing:.1em; }

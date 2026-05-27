@@ -122,9 +122,9 @@ const DISCIPLES_INIT = [
     stats:{ root:10, wit:10, mind:10, spirit:10, luck:6 },
     bio:`残墟门第十六代掌门。三百年前一战之后，未曾再出闭关室。\n人们说他还在炼最后一口气——也有人说他早已坐化。\n你接任时，他终于开口："你是第十七代。但愿不是最后一代。"`,
     bonds:[],
-    skill:"残卷掌",
-    weapon:"sw_canjuan",
     intro:`「孩子，我已三百岁了。」`,
+    skill:"七十年一念",
+    weapon:"sw_canjuan",
     flags:{ master:true, locked:true, hidden:false },
   },
 ];
@@ -628,6 +628,7 @@ const ITEMS = [
   { id:"sw_qingyin",  type:"weapon", rarity:4, name:"清音笛",      icon:"it_sw_qingyin",  slot:"music", atk:12, ability:"清音 · 抚琴回血 + 减伤",       lore:`小雨随身竹笛。一节断过，用银丝绕过。` },
   { id:"sw_xueyu",    type:"weapon", rarity:5, name:"血煞匕",      icon:"it_sw_xueyu",    slot:"dagger",atk:30, ability:"血煞 · 杀敌后回血 30%",         lore:`无名所携。从不见出鞘——出鞘必见血。` },
   { id:"sw_canjuan",  type:"weapon", rarity:5, name:"残卷",        icon:"it_sw_canjuan",  slot:"scroll",atk:0,  ability:"祖师残卷 · 提升全员悟性",       lore:`祖师爷留给第十七代的最后一卷。` },
+  { id:"sw_canjuan_full", type:"weapon", rarity:5, name:"残卷·全", icon:"it_sw_canjuan",  slot:"scroll",atk:60, ability:"一念长生 · 战斗中全属性 +30%，每回合回 8% HP/MP", lore:`残卷尽显时所凝。三百年祖师执念所化，唯第十七代可执。` },
   { id:"sw_iron",     type:"weapon", rarity:1, name:"铁剑",        icon:"it_sw_iron",     slot:"sword", atk:6,  ability:"普通铁剑",                       lore:`新弟子入门首发。` },
   { id:"sw_sunmoon",  type:"weapon", rarity:5, name:"日月双轮",    icon:"it_sw_sunmoon",  slot:"twin",  atk:34, ability:"双轮 · 双击 / 暴击 +30%",       lore:`传闻虚仙宗弟子佩物。眼下你只能从幻境中见过。` },
 
