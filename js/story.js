@@ -169,6 +169,17 @@ const Story = (() => {
           if(node._onAfterClose){
             node._onAfterClose();
           }
+          // 主线节点结束后，若有新解锁弟子的自介在排队 → 自动播
+          else if(G.state.flags?._pendingIntro?.length){
+            const queue = G.state.flags._pendingIntro;
+            G.state.flags._pendingIntro = [];
+            Save.persist();
+            setTimeout(() => {
+              playIntroSeries(queue, () => {
+                if(typeof Tasks !== 'undefined') Tasks.renderFloater();
+              });
+            }, 700);
+          }
         };
         cont.appendChild(btn);
       });
@@ -229,14 +240,22 @@ const Story = (() => {
     // —— 剧情解锁弟子 ——
     if(r.recruitDisciple && typeof Disciples !== 'undefined'){
       const arr = Array.isArray(r.recruitDisciple) ? r.recruitDisciple : [r.recruitDisciple];
+      const newlyMet = [];
       arr.forEach(id => {
         const d = G.state.disciples.find(x => x.id===id);
         if(d && d.flags?.locked){
           d.flags.locked = false;
           d.flags.hidden = false;
           if(typeof Tasks !== 'undefined') Tasks.mark('t_first_recruit');
+          // 仅未播过自介的才入队
+          if(!G.state.flags?.[`met_${id}`]) newlyMet.push(id);
         }
       });
+      // 缓存到 state.flags._pendingIntro，由 closeImmersive 后触发
+      if(newlyMet.length){
+        G.state.flags = G.state.flags || {};
+        G.state.flags._pendingIntro = (G.state.flags._pendingIntro||[]).concat(newlyMet);
+      }
     }
   }
 

@@ -1239,6 +1239,11 @@ body.immersive-on { overflow:hidden }
 }
 .player-portrait{
   width:80px; height:80px; flex-shrink:0;
+  background-size:cover;
+  background-position:center top;
+  border:2px solid var(--gold);
+  border-radius:6px;
+  box-shadow:0 0 18px rgba(201,163,90,.5);
 }
 .player-info{ flex:1; min-width:0; }
 .player-name{

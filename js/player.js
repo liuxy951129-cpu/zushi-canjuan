@@ -42,18 +42,7 @@ const Player = (() => {
       </div>
 
       <div class="player-card">
-        <div class="player-portrait">
-          <svg viewBox="0 0 80 80" style="width:100%;height:100%">
-            <defs>
-              <radialGradient id="pgrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#c9a35a"/>
-                <stop offset="100%" stop-color="#3a2820"/>
-              </radialGradient>
-            </defs>
-            <circle cx="40" cy="40" r="38" fill="url(#pgrad)" stroke="#c9a35a" stroke-width="1.5"/>
-            <text x="40" y="52" text-anchor="middle" font-family="Ma Shan Zheng" font-size="36" fill="#1a1310">掌</text>
-          </svg>
-        </div>
+        <div class="player-portrait" style="background-image:url(assets/portraits/d_player.jpg)"></div>
         <div class="player-info">
           <div class="player-name">${p.name} · ${p.title}</div>
           <div class="player-meta">第十七代 · ${p.age} 岁 · 境界 <b>${REALMS_LOCAL[p.realm]}</b></div>

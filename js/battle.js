@@ -142,13 +142,7 @@ const Battle = (() => {
     const playerSelected = selected.includes("_player");
     const playerRow = player ? `
       <div class="our-row is-player ${playerSelected?'sel':''}" data-did="_player">
-        <div class="our-player-icon">
-          <svg viewBox="0 0 60 60" style="width:100%;height:100%">
-            <defs><radialGradient id="pgrad2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#c9a35a"/><stop offset="100%" stop-color="#3a2820"/></radialGradient></defs>
-            <circle cx="30" cy="30" r="28" fill="url(#pgrad2)" stroke="#c9a35a" stroke-width="1.5"/>
-            <text x="30" y="40" text-anchor="middle" font-family="Ma Shan Zheng" font-size="28" fill="#1a1310">掌</text>
-          </svg>
-        </div>
+        <img src="assets/portraits/d_player.jpg" />
         <div class="our-row-info">
           <div class="our-row-name">${player.name} · ${player.title} <span class="our-master-tag">★ 玩家</span> <span class="our-row-realm">${realmText(player.realm)}</span></div>
           <div class="our-row-bar">
@@ -266,7 +260,7 @@ const Battle = (() => {
       }
       const ds = deriveBattleStats(unit);
       const portrait = isPlayer
-        ? "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><defs><radialGradient id='g'><stop offset='0%' stop-color='%23c9a35a'/><stop offset='100%' stop-color='%233a2820'/></radialGradient></defs><circle cx='40' cy='40' r='38' fill='url(%23g)' stroke='%23c9a35a' stroke-width='1.5'/><text x='40' y='52' text-anchor='middle' font-family='Ma Shan Zheng' font-size='40' fill='%231a1310'>掌</text></svg>"
+        ? "assets/portraits/d_player.jpg"
         : (isOurs ? `assets/portraits/${unit.pic}.jpg` : `assets/portraits/${unit.portrait}.jpg`);
       return {
         side,
