@@ -632,10 +632,16 @@ const ITEMS = [
   { id:"sw_sunmoon",  type:"weapon", rarity:5, name:"日月双轮",    icon:"it_sw_sunmoon",  slot:"twin",  atk:34, ability:"双轮 · 双击 / 暴击 +30%",       lore:`传闻虚仙宗弟子佩物。眼下你只能从幻境中见过。` },
 
   // —— 丹药 ——
-  { id:"pill_ningshen",type:"pill",   rarity:2, name:"凝神丹",     icon:"it_pill_ningshen",effect:`修为 +30 / 心境 +1`, lore:`本派丹房产物。` },
-  { id:"pill_huiyuan", type:"pill",   rarity:3, name:"回元丹",     icon:"it_pill_huiyuan", effect:`恢复全部体力 / 寿元 +1`, lore:`落霞谷流传。` },
-  { id:"pill_dagong",  type:"pill",   rarity:4, name:"大功丹",     icon:"it_pill_dagong",  effect:`修为 +120 / 概率走火 5%`, lore:`不可常服。` },
-  { id:"pill_dujie",   type:"pill",   rarity:5, name:"渡劫丹",     icon:"it_pill_dujie",   effect:`渡劫成功率 +25%`, lore:`万金难求。` },
+  { id:"pill_ningshen",type:"pill",   rarity:2, name:"凝神丹",     icon:"it_pill_ningshen",effect:`修为 +30 / 心境 +1`, lore:`本派丹房产物。`, battle:{ name:"凝神", desc:"恢复 25 MP", mp:25 } },
+  { id:"pill_huiyuan", type:"pill",   rarity:3, name:"回元丹",     icon:"it_pill_huiyuan", effect:`恢复全部体力 / 寿元 +1`, lore:`落霞谷流传。`, battle:{ name:"回元", desc:"回复 60% HP", hpRatio:0.6 } },
+  { id:"pill_dagong",  type:"pill",   rarity:4, name:"大功丹",     icon:"it_pill_dagong",  effect:`修为 +120 / 概率走火 5%`, lore:`不可常服。`, battle:{ name:"大功", desc:"3 回合内攻击 +50%", buff:{ atk:0.5, turns:3 } } },
+  { id:"pill_dujie",   type:"pill",   rarity:5, name:"渡劫丹",     icon:"it_pill_dujie",   effect:`渡劫成功率 +25%`, lore:`万金难求。`, battle:{ name:"渡劫", desc:"满血满蓝且复活倒下队友", revive:true } },
+
+  // —— 符箓（战斗专用） ——
+  { id:"fu_lei",      type:"talisman", rarity:3, name:"雷符",       icon:"it_fu_lei",      effect:`战斗中：群伤 80 雷电`, lore:`雷霆门外流符箓。`, battle:{ name:"雷符", desc:"群伤 80 法术", aoe:true, magic:80 } },
+  { id:"fu_huo",      type:"talisman", rarity:3, name:"赤焰符",     icon:"it_fu_huo",      effect:`战斗中：单体 110 火焰 + 灼烧`, lore:`落霞谷副产。`, battle:{ name:"赤焰符", desc:"单体 110 法术 + 灼烧 2 回合", magic:110, dot:{dmg:12, turns:2, name:"灼烧"} } },
+  { id:"fu_bing",     type:"talisman", rarity:3, name:"冰封符",     icon:"it_fu_bing",     effect:`战斗中：冻住敌方一回合`, lore:`江南崔氏家传。`, battle:{ name:"冰封符", desc:"冻结敌方目标 1 回合", freeze:1 } },
+  { id:"fu_huan",     type:"talisman", rarity:4, name:"幻形符",     icon:"it_fu_huan",     effect:`战斗中：全队 3 回合 +40% 闪避`, lore:`紫薇阁奇货。`, battle:{ name:"幻形符", desc:"全队 3 回合 +40% 闪避", buff:{ eva:0.4, turns:3, team:true } } },
 
   // —— 礼物（送弟子用，提升好感） ——
   { id:"gf_silkfan",   type:"gift",   rarity:2, name:"绢面扇",     icon:"it_gf_silkfan",   target:["lingxue","xiaoyu"], bond:6, lore:`江南绣坊货色。` },

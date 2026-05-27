@@ -1,6 +1,6 @@
 /* 存档 */
 const Save = (() => {
-  const KEY = "zsc_save_v7"; // v7: 战斗系统
+  const KEY = "zsc_save_v8"; // v8: 战斗道具
   function load(){ try{ const s=localStorage.getItem(KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(G.state)); }catch(e){} }
   function clear(){
@@ -11,6 +11,7 @@ const Save = (() => {
     localStorage.removeItem("zsc_save_v4");
     localStorage.removeItem("zsc_save_v5");
     localStorage.removeItem("zsc_save_v6");
+    localStorage.removeItem("zsc_save_v7");
   }
   function newSave(){
     return {
@@ -31,7 +32,10 @@ const Save = (() => {
       stats: { runs:0, perfects:0, deaths:0 },
       inv: {
         sw_iron: 2,
-        pill_ningshen: 1,
+        pill_ningshen: 2,
+        pill_huiyuan: 2,
+        fu_lei: 2,
+        fu_bing: 1,
         gf_silkfan: 1,
       },
       equip: {

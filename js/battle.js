@@ -13,9 +13,11 @@ const Battle = (() => {
     const meRealm = (G.state.disciples.find(d => d.id==="chenyuan") || {realm:0}).realm;
     const cards = Object.entries(ENEMY_SECTS).map(([sid, sect])=>{
       const leader = sect.members.find(m => m.isLeader);
-      const ourWin = G.state.battle?.victories?.[sid];
+      const winCount = G.state.battle?.victories?.[sid] || 0;
       const danger = leader.realm;
       const dangerColor = danger>=6?"#ff5050":danger>=4?"#ffc864":"#80c898";
+      const winText = winCount>=3 ? "宿 敌 已 平（×"+winCount+"）" : winCount>0 ? "已 攻 破 ✓ ×"+winCount : "尚 未 出 手";
+      const winColor = winCount>=3 ? "var(--candle)" : winCount>0 ? "var(--gold-2)" : "var(--ink-3)";
       return `
       <div class="battle-sect-card" data-sid="${sid}" style="border-color:${sect.color}">
         <div class="bsc-banner" style="background:linear-gradient(135deg,${sect.color}66,${sect.color}22)">
@@ -25,7 +27,7 @@ const Battle = (() => {
         <div class="bsc-body">
           <div class="bsc-stat"><span>实力评定</span><b style="color:${dangerColor}">${realmText(leader.realm)} ${"★".repeat(Math.min(5,leader.realm))}</b></div>
           <div class="bsc-stat"><span>门下高手</span><b>${sect.members.length} 人</b></div>
-          <div class="bsc-stat"><span>本派战绩</span><b style="color:${ourWin?'var(--gold-2)':'var(--ink-3)'}">${ourWin?"已 攻 破 ✓":"尚 未 出 手"}</b></div>
+          <div class="bsc-stat"><span>本派战绩</span><b style="color:${winColor}">${winText}</b></div>
           <div class="bsc-actions">
             <button class="btn small primary" data-act-battle="prep" data-sid="${sid}">入 阵 论 道</button>
           </div>
@@ -210,9 +212,61 @@ const Battle = (() => {
     };
 
     Modal.close();
-    buildBattleUI();
-    pushLog(`【宗门战】${sect.name} VS 残墟门，${mode} 论道开始！`);
-    nextRound();
+    // 开战转场：黑屏剑光 1.4s + 战前喊话
+    playOpeningTransition(sect, ()=>{
+      buildBattleUI();
+      pushLog(`【宗门战】${sect.name} VS 残墟门，${mode} 论道开始！`);
+      nextRound();
+    });
+  }
+
+  // —— 开战转场 ——
+  const OPENING_LINES = {
+    sect_thunder: { ally:"「雷霆门，欺人太甚——还剑！」", enemy:"「残墟小辈，敢闯雷霆？！」" },
+    sect_luoxia:  { ally:"「谷主，今日只论高下，不伤性命。」", enemy:"「年轻人，本谷的丹房可不是练剑场。」" },
+    sect_xuanyin: { ally:"「玄阴邪术，今日斩之。」", enemy:"「呵呵呵……新的祭品来了。」" },
+    sect_ziwei:   { ally:"「阁主，论道一场。」", enemy:"「来吧。星河流转，自有定数。」" },
+    sect_xueyue:  { ally:"「血月教，不死不休。」", enemy:"「血月之下，无人能逃！」" },
+    sect_xuxian:  { ally:"「真君，请！」", enemy:"「贫道恭候多时。」" },
+  };
+  function playOpeningTransition(sect, onDone){
+    let el = document.getElementById("battle-opening");
+    if(el) el.remove();
+    el = document.createElement("div");
+    el.id = "battle-opening";
+    el.className = "battle-opening";
+    const allyD = G.state.disciples.find(d => d.id==="chenyuan" && !d.flags?.dead)
+                || G.state.disciples.find(d => !d.flags?.dead && !d.flags?.locked);
+    const allyPic = allyD ? `assets/portraits/${allyD.pic}.jpg` : "assets/portraits/d_chenyuan.jpg";
+    const enemyL = sect.members.find(m=>m.isLeader);
+    const enemyPic = `assets/portraits/${enemyL.portrait}.jpg`;
+    const lines = OPENING_LINES[sect.bg ? Object.keys(ENEMY_SECTS).find(k=>ENEMY_SECTS[k]===sect) : ""] || OPENING_LINES.sect_thunder;
+    const sid = Object.keys(ENEMY_SECTS).find(k=>ENEMY_SECTS[k]===sect);
+    const realLines = OPENING_LINES[sid] || OPENING_LINES.sect_thunder;
+    el.innerHTML = `
+      <div class="bo-flash"></div>
+      <div class="bo-sword"></div>
+      <div class="bo-vs">
+        <div class="bo-side bo-ally">
+          <img src="${allyPic}" />
+          <div class="bo-name">${allyD?.name || '陈渊'}</div>
+          <div class="bo-quote">${realLines.ally}</div>
+        </div>
+        <div class="bo-vs-mark">VS</div>
+        <div class="bo-side bo-enemy">
+          <img src="${enemyPic}" />
+          <div class="bo-name">${enemyL.name}</div>
+          <div class="bo-quote">${realLines.enemy}</div>
+        </div>
+      </div>
+      <div class="bo-title">${sect.name} · ${B.mode} 论 道</div>
+    `;
+    document.body.appendChild(el);
+    requestAnimationFrame(()=>el.classList.add("active"));
+    setTimeout(()=>{
+      el.classList.add("fade-out");
+      setTimeout(()=>{ el.remove(); onDone(); }, 500);
+    }, 2200);
   }
 
   // —— UI 构建 ——
@@ -310,6 +364,15 @@ const Battle = (() => {
       const e = B.order[B.orderIdx];
       const unit = (e.side==="ally"?B.allies:B.enemies)[e.idx];
       if(unit.dead){ B.orderIdx++; continue; }
+      // 冻结：跳过本回合
+      const fz = unit.buffs.find(b=>b.frozen);
+      if(fz){
+        pushLog(`${unit.name} 被冻结，无法行动`);
+        flashFx(unit, "miss");
+        B.orderIdx++;
+        setTimeout(nextActor, 500);
+        return;
+      }
       B.activeSide = e.side;
       B.activeIdx = e.idx;
       renderTeams();
@@ -357,6 +420,7 @@ const Battle = (() => {
   // —— 我方行动面板 ——
   function showActionPanel(unit){
     const panel = document.getElementById("battle-panel");
+    const tab = (B.panelTab || "skills");
     const skBtns = unit.skills.map(sid=>{
       const sk = BATTLE_SKILLS[sid];
       if(!sk) return "";
@@ -375,6 +439,28 @@ const Battle = (() => {
       `;
     }).join("");
 
+    // 物品 tab：从 G.state.inv 取所有 battle 字段
+    const battleItems = Object.entries(G.state.inv||{})
+      .map(([id,n])=>{ const it = (typeof ITEM==='function')?ITEM(id):null; return (it && it.battle && n>0) ? {id, n, item:it} : null; })
+      .filter(Boolean);
+    const itemBtns = battleItems.length ? battleItems.map(({id,n,item})=>{
+      const b = item.battle;
+      const tags = [];
+      if(b.hpRatio) tags.push(`<span class="bsk-pow">回 ${Math.round(b.hpRatio*100)}% HP</span>`);
+      if(b.mp)      tags.push(`<span class="bsk-mp">+${b.mp} MP</span>`);
+      if(b.magic)   tags.push(`<span class="bsk-pow">威 ${b.magic} 法</span>`);
+      if(b.aoe)     tags.push('<span class="bsk-aoe">群</span>');
+      if(b.freeze)  tags.push('<span class="bsk-aoe">冻 结</span>');
+      if(b.revive)  tags.push('<span class="bsk-aoe">复 活</span>');
+      return `
+        <button class="b-skill-btn b-item-btn" data-item="${id}">
+          <div class="bsk-name">${item.name} <span class="bsk-stock">×${n}</span></div>
+          <div class="bsk-meta">${tags.join('')}</div>
+          <div class="bsk-desc">${b.desc}</div>
+        </button>
+      `;
+    }).join("") : '<div class="b-empty">背包内无可用战斗道具。</div>';
+
     panel.innerHTML = `
       <div class="b-panel-head">
         <img src="${unit.portrait}" />
@@ -382,28 +468,125 @@ const Battle = (() => {
           <div class="bph-name">${unit.name} 的回合</div>
           <div class="bph-stat">HP ${unit.hp}/${unit.maxHp} · MP ${unit.mp}/${unit.maxMp} · 速 ${unit.spd}</div>
         </div>
+        <div class="b-tabs">
+          <button class="b-tab ${tab==='skills'?'on':''}" data-tab="skills">技 能</button>
+          <button class="b-tab ${tab==='items'?'on':''}" data-tab="items">物 品</button>
+        </div>
       </div>
-      <div class="b-skill-grid">${skBtns}</div>
+      <div class="b-skill-grid" id="b-tab-content">
+        ${tab==='skills' ? skBtns : itemBtns}
+      </div>
     `;
     panel.classList.add("active");
 
-    panel.querySelectorAll(".b-skill-btn").forEach(b=>{
+    panel.querySelectorAll(".b-tab").forEach(t=>{
+      t.onclick = ()=>{
+        B.panelTab = t.dataset.tab;
+        showActionPanel(unit);
+      };
+    });
+
+    panel.querySelectorAll(".b-skill-btn[data-skill]").forEach(b=>{
       b.onclick = ()=>{
         if(b.classList.contains("off")) return;
         const sid = b.dataset.skill;
         const sk = BATTLE_SKILLS[sid];
         // 目标选择
         if(sk.aoe || sk.kind==='buff' || sk.kind==='recover' || (sk.kind==='heal' && sk.heal?.team)){
-          // 无需选目标
           executeSkill(unit, sid, null);
         } else if(sk.kind==='heal'){
-          // 选我方
           pickTarget("ally", t=> executeSkill(unit, sid, t));
         } else {
           pickTarget("enemy", t=> executeSkill(unit, sid, t));
         }
       };
     });
+    panel.querySelectorAll(".b-item-btn[data-item]").forEach(b=>{
+      b.onclick = ()=>{
+        const id = b.dataset.item;
+        const it = ITEM(id);
+        const eff = it.battle;
+        // 目标选择
+        if(eff.aoe || eff.buff?.team || eff.revive){
+          useItem(unit, id, null);
+        } else if(eff.hpRatio || eff.mp || eff.buff && !eff.buff.team){
+          pickTarget("ally", t=> useItem(unit, id, t));
+        } else {
+          pickTarget("enemy", t=> useItem(unit, id, t));
+        }
+      };
+    });
+  }
+
+  // —— 物品使用 ——
+  function useItem(actor, id, target){
+    const it = ITEM(id);
+    const eff = it.battle;
+    // 扣库存
+    G.state.inv[id] = Math.max(0, (G.state.inv[id]||0) - 1);
+    Save.persist();
+    pushLog(`<b>${actor.name}</b> 使用 <b>${it.name}</b>！`);
+    const panel = document.getElementById("battle-panel");
+    if(panel) panel.classList.remove("active");
+
+    // HP 恢复
+    if(eff.hpRatio){
+      const t = target || actor;
+      const heal = Math.round(t.maxHp * eff.hpRatio);
+      t.hp = Math.min(t.maxHp, t.hp + heal);
+      pushLog(`${t.name} 回复 ${heal} HP`);
+      flashFx(t, "heal");
+      spawnFloating(t, "+"+heal, "#7ed957");
+    }
+    // MP 恢复
+    if(eff.mp){
+      const t = target || actor;
+      t.mp = Math.min(t.maxMp, t.mp + eff.mp);
+      pushLog(`${t.name} 回复 ${eff.mp} MP`);
+      flashFx(t, "buff");
+      spawnFloating(t, "+"+eff.mp+"MP", "#7cb5e8");
+    }
+    // 法术伤害
+    if(eff.magic){
+      const targets = eff.aoe ? B.enemies.filter(u=>!u.dead) : [target];
+      targets.forEach(t=>{
+        const elemMul = elementMultiplier("fire", t.element);
+        const raw = (eff.magic + actor.mag*0.5) * (1 - t.mdef/(t.mdef+50));
+        const dmg = Math.max(1, Math.round(raw * (0.9+Math.random()*0.2) * elemMul));
+        t.hp -= dmg;
+        spawnFloating(t, "-"+dmg, "#ff5544");
+        pushLog(`${t.name} 受 <b style="color:#ff8060">${dmg}</b> 法术伤害`);
+        flashFx(t, "dmg");
+        if(eff.dot){ t.dots.push({...eff.dot}); }
+        if(t.hp<=0){ t.hp=0; t.dead=true; pushLog(`<b style="color:#ffc864">${t.name}</b> 倒下！`); }
+      });
+    }
+    // 冻结（debuff turn=N，敌方失去回合：用 buff 标记 frozen）
+    if(eff.freeze){
+      target.buffs.push({ name:"冰封", icon:"❄", frozen:true, turns:eff.freeze });
+      pushLog(`${target.name} 被冰封 ${eff.freeze} 回合`);
+      flashFx(target, "buff");
+    }
+    // Buff
+    if(eff.buff){
+      const team = eff.buff.team ? B.allies.filter(u=>!u.dead) : [actor];
+      team.forEach(u=>{
+        u.buffs.push({ name:it.name, ...eff.buff, icon:"✦" });
+        pushLog(`${u.name} 获得 ${it.name}`);
+        flashFx(u, "buff");
+      });
+    }
+    // 渡劫丹：满血满蓝 + 复活
+    if(eff.revive){
+      B.allies.forEach(u=>{
+        u.dead = false;
+        u.hp = u.maxHp; u.mp = u.maxMp;
+        flashFx(u, "heal");
+      });
+      pushLog(`<b style="color:var(--candle)">渡劫丹光芒大盛！全军复活！</b>`);
+    }
+    renderTeams();
+    setTimeout(()=>{ checkEnd(); if(!B.ended) advanceAfterAction(); }, 500);
   }
 
   function pickTarget(side, cb){
@@ -629,33 +812,171 @@ const Battle = (() => {
     }
   }
 
+  // —— 战后对白库（胜负各有，按派别个性化）——
+  const ENDING_LINES = {
+    sect_thunder: {
+      win:[
+        { who:"enemy", text:"「呃……雷某……竟败给残墟门……」" },
+        { who:"ally",  text:"「雷门主，胜负有时。今日只为正名，并无杀心。」" },
+        { who:"enemy", text:"「……此恩，雷某记下了。来日若再相逢，必以诚意奉茶。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「哈哈哈！残墟门？连山都下不了，还想撼我雷霆门？」" },
+        { who:"ally",  text:"「……记下了。下次再来。」" },
+      ]
+    },
+    sect_luoxia: {
+      win:[
+        { who:"enemy", text:"「霞儿一时疏忽……竟在自家谷中败北。」" },
+        { who:"ally",  text:"「谷主丹术天下闻名，今日之战，是剑赢了药。」" },
+        { who:"enemy", text:"「呵，会说话。来日若有疾，可入谷取药。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「年轻人，剑还没磨利就来谷里撒野？」" },
+        { who:"ally",  text:"「……失礼了。」" },
+      ]
+    },
+    sect_xuanyin: {
+      win:[
+        { who:"enemy", text:"「鬼……鬼气竟被你斩断……」" },
+        { who:"ally",  text:"「玄阴宗主，邪术终归不敌正心。我们走。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「嘶嘶……活人的血最是甘甜……再来啊。」" },
+        { who:"ally",  text:"「……此地不可久留，撤！」" },
+      ]
+    },
+    sect_ziwei: {
+      win:[
+        { who:"enemy", text:"「星河流转，竟有此变。残墟门——名不虚传。」" },
+        { who:"ally",  text:"「阁主谬赞。改日若有疑难，还望指点。」" },
+        { who:"enemy", text:"「君子之争，自当如此。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「学问未成便来论道？回去多读三年书。」" },
+        { who:"ally",  text:"「……领教了。」" },
+      ]
+    },
+    sect_xueyue: {
+      win:[
+        { who:"enemy", text:"「血月……竟被一缕剑光斩开……不可能……」" },
+        { who:"ally",  text:"「血月教魔头，今日先饶你一命。再敢南下，定取尔首。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「嘿嘿，新血新血——拿去献给血月吧！」" },
+        { who:"ally",  text:"「……快撤！别让师妹们看见！」" },
+      ]
+    },
+    sect_xuxian: {
+      win:[
+        { who:"enemy", text:"「白鹿渡厄，亦渡不过这一剑。残墟门……已非昔日模样。」" },
+        { who:"ally",  text:"「真君过誉。本派不过是想在三大宗里，留一席位。」" },
+        { who:"enemy", text:"「贫道为你证之。三大宗——必有残墟门一席。」" },
+      ],
+      lose:[
+        { who:"enemy", text:"「年轻人，红尘仍多，不必急于一时。」" },
+        { who:"ally",  text:"「……晚辈受教。」" },
+      ]
+    },
+  };
+
+  function showEndingDialog(won, sid, onDone){
+    const sect = ENEMY_SECTS[sid];
+    const lines = (ENDING_LINES[sid] || {})[won?"win":"lose"];
+    if(!lines || !lines.length){ onDone(); return; }
+    // 我方代表：陈渊（若死 → 凌雪）
+    let speaker_ally = G.state.disciples.find(d => d.id==="chenyuan" && !d.flags?.dead);
+    if(!speaker_ally) speaker_ally = G.state.disciples.find(d => d.id==="lingxue" && !d.flags?.dead);
+    if(!speaker_ally) speaker_ally = G.state.disciples.find(d => !d.flags?.dead && !d.flags?.locked);
+    const allyPic = speaker_ally ? `assets/portraits/${speaker_ally.pic}.jpg` : "assets/portraits/d_chenyuan.jpg";
+    const allyName = speaker_ally?.name || "陈 渊";
+    const enemyLeader = sect.members.find(m => m.isLeader);
+    const enemyPic = `assets/portraits/${enemyLeader.portrait}.jpg`;
+    const enemyName = enemyLeader.name;
+    const bg = `assets/scenes/${sect.bg}.jpg`;
+
+    const el = document.getElementById("battle");
+    if(!el){ onDone(); return; }
+    const dlg = document.createElement("div");
+    dlg.className = "b-ending-dialog";
+    dlg.innerHTML = `
+      <div class="bed-bg" style="background-image:url(${bg})"></div>
+      <div class="bed-mask"></div>
+      <div class="bed-portraits">
+        <div class="bed-port enemy${won?' loser':' winner'}">
+          <img src="${enemyPic}" />
+          <div class="bed-name">${enemyName}</div>
+        </div>
+        <div class="bed-port ally${won?' winner':' loser'}">
+          <img src="${allyPic}" />
+          <div class="bed-name">${allyName}</div>
+        </div>
+      </div>
+      <div class="bed-textbox">
+        <div class="bed-spk" id="bed-spk"></div>
+        <div class="bed-text" id="bed-text"></div>
+        <div class="bed-tip">▾ 点 击 继 续</div>
+      </div>
+    `;
+    el.appendChild(dlg);
+    requestAnimationFrame(()=>dlg.classList.add("active"));
+
+    let i = 0;
+    function showLine(){
+      if(i >= lines.length){
+        dlg.classList.remove("active");
+        setTimeout(()=>{ dlg.remove(); onDone(); }, 400);
+        return;
+      }
+      const l = lines[i];
+      const isAlly = l.who === "ally";
+      document.getElementById("bed-spk").textContent = isAlly ? allyName : enemyName;
+      document.getElementById("bed-text").textContent = l.text;
+      // 高亮当前发言者
+      dlg.querySelectorAll(".bed-port").forEach(p=>p.classList.remove("speaking"));
+      dlg.querySelector(`.bed-port.${isAlly?'ally':'enemy'}`).classList.add("speaking");
+      i++;
+    }
+    dlg.onclick = showLine;
+    showLine();
+  }
+
   function endBattle(won, fled=false){
     if(B.ended) return;
     B.ended = true;
-    // 给奖励
+    const sid = B.sid;
+    // 给奖励（仅胜利结算后）
     G.state.battle = G.state.battle || { victories:{} };
+    let info = {};
     if(won){
       G.state.battle.victories = G.state.battle.victories || {};
-      G.state.battle.victories[B.sid] = true;
-      // 奖励：声望 + 资源
+      const isFirstWin = !G.state.battle.victories[sid];
+      G.state.battle.victories[sid] = (G.state.battle.victories[sid]||0) + 1;
       const lvl = B.enemies.find(u=>u.isLeader).realm;
-      const repGain = 80 + lvl*40;
-      const coinGain = 300 + lvl*150;
-      const stoneGain = 30 + lvl*15;
-      G.state.rep = (G.state.rep||0) + repGain;
-      G.state.coin = (G.state.coin||0) + coinGain;
-      G.state.stone = (G.state.stone||0) + stoneGain;
-      Save.persist();
-      showEndModal(true, { rep:repGain, coin:coinGain, stone:stoneGain });
-    } else {
-      // 失败：弟子掉血但不死（剧情容错）
+      // 首胜全奖，重复 30%
+      const m = isFirstWin ? 1 : 0.3;
+      info = {
+        rep:   Math.round((80 + lvl*40)*m),
+        coin:  Math.round((300+ lvl*150)*m),
+        stone: Math.round((30 + lvl*15)*m),
+        firstWin: isFirstWin,
+      };
+      G.state.rep   = (G.state.rep||0)   + info.rep;
+      G.state.coin  = (G.state.coin||0)  + info.coin;
+      G.state.stone = (G.state.stone||0) + info.stone;
+      // 战后回血保护：所有未死者回 50% HP，死者降 1 阶 exp（不真死）
       B.allies.forEach(u=>{
         const d = G.state.disciples.find(x=>x.id===u.id);
-        if(d) d.flags = d.flags || {};
+        if(!d) return;
+        if(u.dead){ d.exp = Math.max(0, (d.exp||0) - 50); }
       });
       Save.persist();
-      showEndModal(false, { fled });
+    } else {
+      info = { fled };
+      Save.persist();
     }
+    // 先放战后对话，结束再弹结算
+    showEndingDialog(won, sid, ()=> showEndModal(won, info));
   }
 
   function showEndModal(won, info){
@@ -664,8 +985,12 @@ const Battle = (() => {
     const card = document.createElement("div");
     card.className = "b-end-modal";
     if(won){
+      const firstTag = info.firstWin
+        ? '<div class="b-end-firstwin">★ 初 次 攻 破 ★</div>'
+        : '<div class="b-end-repeat">（重复挑战 · 奖励削减 70%）</div>';
       card.innerHTML = `
         <div class="b-end-title win">胜 · 攻 破 ${B.sect.name}</div>
+        ${firstTag}
         <div class="b-end-sub">「${B.sect.name} 帮主已败，残墟门威名远扬。」</div>
         <div class="b-end-rewards">
           <div class="b-end-rwd"><span>声 望</span><b>+${info.rep}</b></div>
