@@ -105,8 +105,13 @@ const Battle = (() => {
   function openPrep(sid){
     const sect = ENEMY_SECTS[sid];
     const ours = G.state.disciples.filter(d => !d.flags?.dead && !d.flags?.left && !d.flags?.hidden && !d.flags?.locked);
+    const playerWounded = false; // 玩家暂不挂伤
     const mode = (G.state.battle?.lastMode) || "3v3";
-    const selected = (G.state.battle?.lastTeam || []).filter(id => ours.find(o=>o.id===id));
+    const selected = (G.state.battle?.lastTeam || []).filter(id => {
+      if(id === "_player") return true;
+      const d = ours.find(o=>o.id===id);
+      return d && !d.flags?.wounded;
+    });
 
     const enemyList = sect.members.map(m=>{
       const tag = m.isLeader ? '<span class="enemy-leader-tag">帮主</span>' : '';
@@ -122,11 +127,12 @@ const Battle = (() => {
 
     const ourList = ours.map(d=>{
       const sel = selected.includes(d.id);
+      const isWounded = d.flags?.wounded;
       return `
-        <div class="our-row ${sel?'sel':''}" data-did="${d.id}">
+        <div class="our-row ${sel?'sel':''}${isWounded?' wounded':''}" data-did="${d.id}" ${isWounded?'data-locked="1"':''}>
           <img src="assets/portraits/${d.pic}.jpg" />
           <div class="our-row-info">
-            <div class="our-row-name">${d.name} <span class="our-row-realm">${realmText(d.realm)}</span></div>
+            <div class="our-row-name">${d.name} <span class="our-row-realm">${realmText(d.realm)}</span> ${isWounded?'<span class="our-wound-tag">⚕ 重伤</span>':''}</div>
             <div class="our-row-bar">
               <div class="orb-tag">根 ${d.stats.root}</div>
               <div class="orb-tag">智 ${d.stats.wit}</div>
@@ -205,6 +211,7 @@ const Battle = (() => {
 
     document.querySelectorAll(".our-row").forEach(r=>{
       r.onclick = ()=>{
+        if(r.dataset.locked === "1"){ toast("此弟子重伤在身，无法出战", "bad"); return; }
         const did = r.dataset.did;
         const max = cur.mode==='1v1'?1:3;
         const idx = cur.team.indexOf(did);
@@ -716,6 +723,7 @@ const Battle = (() => {
     const sk = BATTLE_SKILLS[sid];
     actor.mp -= sk.mp;
     pushLog(`<b>${actor.name}</b> 施展 <b>${sk.name}</b>！`);
+    showCenterBanner(`${actor.name} · ${sk.name}`, actor.side === "ally" ? "ally" : "enemy");
     const panel = document.getElementById("battle-panel");
     if(panel) panel.classList.remove("active");
 
@@ -803,6 +811,7 @@ const Battle = (() => {
     }
     let elemTxt = elemMul>1?` 克 制 +`:elemMul<1?` 被 抗 -`:"";
     pushLog(`${target.name} 受 <b style="color:#ff8060">${total}</b> 伤害${elemTxt}`);
+    showCenterDamage(target, total, elemMul);
     flashFx(target, "dmg");
     spawnFloating(target, "-"+total, "#ff5544");
 
@@ -851,6 +860,41 @@ const Battle = (() => {
     f.style.color = color;
     card.appendChild(f);
     setTimeout(()=>f.remove(), 1200);
+  }
+
+  // —— 中央放大动作提示 ——
+  function showCenterBanner(text, side){
+    const root = document.getElementById("battle");
+    if(!root) return;
+    let host = document.getElementById("battle-center-host");
+    if(!host){
+      host = document.createElement("div");
+      host.id = "battle-center-host";
+      root.appendChild(host);
+    }
+    const b = document.createElement("div");
+    b.className = "b-center-banner " + (side||"ally");
+    b.textContent = text;
+    host.appendChild(b);
+    setTimeout(()=>b.classList.add("show"), 10);
+    setTimeout(()=>{ b.classList.remove("show"); setTimeout(()=>b.remove(), 300); }, 1100);
+  }
+  function showCenterDamage(target, dmg, elemMul){
+    const root = document.getElementById("battle");
+    if(!root) return;
+    let host = document.getElementById("battle-center-host");
+    if(!host){
+      host = document.createElement("div");
+      host.id = "battle-center-host";
+      root.appendChild(host);
+    }
+    const tag = elemMul>1 ? "克 制" : elemMul<1 ? "被 抗" : "";
+    const b = document.createElement("div");
+    b.className = "b-center-damage " + (target.side==="ally"?"to-ally":"to-enemy");
+    b.innerHTML = `<span class="b-cd-num">${dmg}</span><span class="b-cd-tag">${target.name} 受创${tag?' · '+tag:''}</span>`;
+    host.appendChild(b);
+    setTimeout(()=>b.classList.add("show"), 10);
+    setTimeout(()=>{ b.classList.remove("show"); setTimeout(()=>b.remove(), 300); }, 1300);
   }
 
   // —— 敌方 AI ——
@@ -1078,7 +1122,26 @@ const Battle = (() => {
       });
       Save.persist();
     } else {
-      info = { fled };
+      // 失败：参战者按战斗中血量比例概率挂彩
+      const wounded = [];
+      B.allies.forEach(u=>{
+        if(u.isPlayer) return; // 玩家不挂伤标记（玩家系统暂未做 wounded）
+        const d = G.state.disciples.find(x=>x.id===u.id);
+        if(!d) return;
+        // 倒下 100% 受伤；剩余血量 < 30% 概率 70%；< 60% 概率 35%
+        const hpPct = u.hp / u.maxHp;
+        let woundChance = 0;
+        if(u.dead) woundChance = 1.0;
+        else if(hpPct < 0.3) woundChance = 0.7;
+        else if(hpPct < 0.6) woundChance = 0.35;
+        if(Math.random() < woundChance){
+          d.flags = d.flags || {};
+          d.flags.wounded = true;
+          d.flags.woundDays = 0;
+          wounded.push(d.name);
+        }
+      });
+      info = { fled, wounded };
       Save.persist();
     }
     // 先放战后对话，结束再弹结算
@@ -1106,9 +1169,13 @@ const Battle = (() => {
         <button class="btn primary" id="btn-end-back">收 兵 回 山</button>
       `;
     } else {
+      const woundList = (info.wounded||[]).length
+        ? `<div class="b-end-wounded"><div class="b-end-wounded-title">⚕ 挂 彩</div><div class="b-end-wounded-list">${info.wounded.map(n=>`<span class="b-wnd-name">${n}</span>`).join('')}</div><div class="b-end-wounded-tip">需服回元丹方能再战</div></div>`
+        : '';
       card.innerHTML = `
         <div class="b-end-title lose">败 · ${info.fled?"撤 离 战 场":"全 军 覆 没"}</div>
         <div class="b-end-sub">「掌门，今日不敌，归山再练吧。」</div>
+        ${woundList}
         <button class="btn ghost" id="btn-end-back">默 默 退 出</button>
       `;
     }

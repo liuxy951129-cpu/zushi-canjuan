@@ -57,7 +57,11 @@
 .mode-btn.on{ background:linear-gradient(135deg, var(--gold), var(--candle)); color:#1a1310; border-color:var(--gold-2); }
 .prep-cols{
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
-  max-height:45vh;
+}
+.enemy-list, .our-list{
+  max-height:48vh; overflow-y:auto;
+  border:1px solid var(--line); border-radius:6px;
+  background:rgba(0,0,0,.3); padding:6px;
 }
 .prep-h4{
   font-family:Ma Shan Zheng; color:var(--gold-2);
@@ -66,11 +70,6 @@
 }
 .prep-sub{ font-family:'PingFang SC',sans-serif; font-size:11px; color:var(--ink-3); letter-spacing:.05em; }
 .prep-sub b{ color:var(--gold-2); }
-.enemy-list, .our-list{
-  max-height:38vh; overflow-y:auto;
-  border:1px solid var(--line); border-radius:6px;
-  background:rgba(0,0,0,.3); padding:6px;
-}
 .enemy-row, .our-row{
   display:flex; align-items:center; gap:8px;
   padding:8px; margin-bottom:6px;
@@ -404,7 +403,7 @@
   .bu-portrait{ width:48px; min-width:48px; }
   .battle-panel{ padding:8px 12px; }
   .b-skill-grid{ grid-template-columns:1fr 1fr; }
-  .prep-cols{ grid-template-columns:1fr; }
+  .prep-cols{ gap:6px; }  /* 保持左右双列 */
   .battle-sect-grid{ grid-template-columns:1fr; }
 }
   .battle-arena{ padding:0 2%; }
@@ -412,7 +411,7 @@
   .bu-portrait{ width:48px; min-width:48px; }
   .battle-panel{ padding:8px 12px; }
   .b-skill-grid{ grid-template-columns:1fr 1fr; }
-  .prep-cols{ grid-template-columns:1fr; }
+  .prep-cols{ gap:6px; }  /* 保持左右双列 */
   .battle-sect-grid{ grid-template-columns:1fr; }
 }
 
@@ -780,4 +779,138 @@
   .rost-role{ font-size:9px; padding:1px 4px; }
   .rost-realm{ font-size:11px; }
   .rost-power{ font-size:14px; }
+}
+
+/* —— 备战重伤 row —— */
+.our-row.wounded{
+  opacity:.5;
+  cursor:not-allowed;
+  filter:grayscale(.4);
+  border-style:dashed;
+}
+.our-wound-tag{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 6px;
+  background:#a83236;
+  color:#fff;
+  font-size:9px;
+  border-radius:2px;
+  letter-spacing:.1em;
+}
+
+/* —— 中央放大动作提示 —— */
+#battle-center-host{
+  position:absolute; left:0; right:0; top:30%;
+  pointer-events:none;
+  z-index:80;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+.b-center-banner{
+  font-family:Ma Shan Zheng;
+  font-size:36px;
+  letter-spacing:.18em;
+  padding:14px 32px;
+  background:linear-gradient(135deg, rgba(20,15,12,.95), rgba(8,5,8,.98));
+  border:2px solid var(--gold);
+  border-radius:8px;
+  color:var(--gold-2);
+  text-shadow:0 0 12px var(--gold), 2px 2px 4px #000;
+  box-shadow:0 8px 30px rgba(0,0,0,.7), 0 0 30px rgba(201,163,90,.4);
+  opacity:0;
+  transform:scale(.6) translateY(-20px);
+  transition:all .35s cubic-bezier(.16,.84,.44,1);
+}
+.b-center-banner.show{ opacity:1; transform:scale(1) translateY(0); }
+.b-center-banner.enemy{
+  border-color:#a83236;
+  color:#ff8060;
+  text-shadow:0 0 12px #a83236, 2px 2px 4px #000;
+  box-shadow:0 8px 30px rgba(0,0,0,.7), 0 0 30px rgba(168,50,54,.4);
+}
+.b-center-damage{
+  display:flex; flex-direction:column; align-items:center;
+  padding:10px 28px;
+  background:linear-gradient(135deg, rgba(168,50,54,.92), rgba(120,30,34,.98));
+  border:2px solid #ff8060;
+  border-radius:8px;
+  box-shadow:0 8px 24px rgba(0,0,0,.7), 0 0 24px rgba(255,128,96,.4);
+  opacity:0;
+  transform:scale(.5) translateY(20px);
+  transition:all .35s cubic-bezier(.16,.84,.44,1);
+}
+.b-center-damage.show{ opacity:1; transform:scale(1) translateY(0); }
+.b-center-damage.to-ally{
+  background:linear-gradient(135deg, rgba(168,50,54,.95), rgba(80,20,24,.98));
+}
+.b-cd-num{
+  font-family:Ma Shan Zheng;
+  font-size:48px;
+  color:#fff;
+  letter-spacing:.05em;
+  text-shadow:0 0 16px #ff8060, 2px 2px 6px #000;
+  line-height:1.1;
+}
+.b-cd-tag{
+  font-size:12px;
+  color:#ffe0c0;
+  letter-spacing:.15em;
+  margin-top:2px;
+  text-shadow:1px 1px 2px #000;
+}
+
+/* —— 战败挂彩列表 —— */
+.b-end-wounded{
+  margin:14px 0;
+  padding:12px;
+  background:rgba(168,50,54,.12);
+  border:1px solid #a83236;
+  border-radius:6px;
+}
+.b-end-wounded-title{
+  font-family:Ma Shan Zheng;
+  color:#ff8060;
+  letter-spacing:.3em;
+  font-size:14px;
+  text-align:center;
+  margin-bottom:8px;
+}
+.b-end-wounded-list{
+  display:flex; gap:6px; flex-wrap:wrap;
+  justify-content:center;
+}
+.b-wnd-name{
+  display:inline-block;
+  padding:3px 10px;
+  background:rgba(168,50,54,.3);
+  border:1px solid #a83236;
+  border-radius:4px;
+  font-size:13px;
+  color:#fff;
+  letter-spacing:.1em;
+}
+.b-end-wounded-tip{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-3);
+  margin-top:8px;
+  letter-spacing:.05em;
+  font-style:italic;
+}
+
+/* 移动端 center 提示更小 */
+@media (max-width:600px){
+  .b-center-banner{ font-size:22px; padding:10px 18px; }
+  .b-cd-num{ font-size:32px; }
+  .b-cd-tag{ font-size:10px; }
+  /* prep-cols 移动端：单列改为窄左右双列以满足"左右排布"要求 */
+  .prep-cols{ grid-template-columns:1fr 1fr !important; gap:4px; }
+  .enemy-row img, .our-row img, .our-player-icon{ width:36px; height:46px; }
+  .enemy-row-name, .our-row-name{ font-size:11px; letter-spacing:.04em; }
+  .enemy-row-realm, .our-row-realm{ font-size:9px; }
+  .orb-tag{ font-size:9px; padding:0 3px; }
+  .enemy-list, .our-list{ max-height:42vh; }
 }

@@ -16,6 +16,7 @@ const Disciples = (() => {
   };
   function activityOf(d){
     if(d.flags?.locked) return "封印";
+    if(d.flags?.wounded) return "重伤";
     if(isBusy(d.id)) return "出门";
     if(d.exp >= (REALM_EXP[d.realm]||99999)) return "悟道·待破";
     const list = ACTIVITIES[d.id] || ["静修", "默坐", "练功", "悟道", "守山"];
@@ -35,7 +36,7 @@ const Disciples = (() => {
       fig.innerHTML = `
         <div class="df-aura"></div>
         <div class="df-portrait" style="background-image:url(${picSrc(d.pic)})"></div>
-        ${busy ? `<div class="df-state" title="出门历练">遣</div>` : (d.flags?.locked ? `<div class="df-state" style="background:#3a3128">封</div>` : "")}
+        ${busy ? `<div class="df-state" title="出门历练">遣</div>` : (d.flags?.locked ? `<div class="df-state" style="background:#3a3128">封</div>` : (d.flags?.wounded ? `<div class="df-state" style="background:#a83236">伤</div>` : ""))}
         <div class="df-realm">${REALMS[d.realm]}</div>
         <div class="df-name">${d.name}</div>
         <div class="df-act">${activity}</div>
@@ -88,7 +89,7 @@ const Disciples = (() => {
         <div class="dd-stats">
           ${STATS.map(k => `<div class="dd-stat"><span class="l">${STAT_LABEL[k]}</span><span class="v">${d.stats[k]}</span></div>`).join("")}
           <div class="dd-stat"><span class="l">修为</span><span class="v">${d.exp}/${expNeeded}</span></div>
-          <div class="dd-stat"><span class="l">状态</span><span class="v">${isBusy(d.id)?"出门":d.flags?.locked?"封印":"在山"}</span></div>
+          <div class="dd-stat"><span class="l">状态</span><span class="v">${isBusy(d.id)?"出门":d.flags?.locked?"封印":d.flags?.wounded?"重伤":"在山"}</span></div>
         </div>
         ${showWeapon ? `
         <div class="dd-bonds" style="margin-top:14px">
@@ -136,15 +137,17 @@ const Disciples = (() => {
         <div class="dd-bonds" style="margin-top:18px">
           <h4>行 动</h4>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
-            ${canBreak ? `<button class="btn primary" id="btn-breakthrough">▶ 尝 试 突 破</button>` : ""}
-            ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
-            ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
+            ${canBreak && !d.flags?.wounded ? `<button class="btn primary" id="btn-breakthrough">▶ 尝 试 突 破</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && !isMaster && !d.flags?.wounded ? `<button class="btn ghost" id="btn-cultivate">⌬ 闭 关 修 炼</button>` : ""}
+            ${!d.flags?.locked && !isBusy(d.id) && !isMaster && !d.flags?.wounded ? `<button class="btn ghost" id="btn-interact">♡ 互 动 / 感情</button>` : ""}
             ${!d.flags?.locked && !isBusy(d.id) && !isMaster ? `<button class="btn ghost" id="btn-gift">⌧ 赠 礼</button>` : ""}
+            ${d.flags?.wounded ? `<button class="btn primary" id="btn-heal">⚕ 服 药 疗 伤<span class="btn-sub">（消耗 1 回元丹）</span></button>` : ""}
             ${isMaster ? `<button class="btn primary" id="btn-canjuan">⌘ 翻 阅 · 祖 师 残 卷</button>` : ""}
             ${d.flags?.locked && !isMaster ? `<button class="btn ghost" id="btn-unlock">⚯ 启 用</button>` : ""}
           </div>
+          ${d.flags?.wounded ? `<div style="margin-top:10px;padding:8px 10px;background:rgba(168,50,54,.15);border:1px solid #a83236;border-radius:4px;font-size:12px;color:#ff8060;letter-spacing:.05em">⚠ 重 伤 在 身 · 不 能 修 炼/出 战/互 动。需 服 用 回 元 丹 治 愈。</div>` : ""}
           ${isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em;font-style:italic">${d.flags?.locked ? '※ 祖师爷尚在闭关。但他将残卷托付给你——可随时翻阅。' : '※ 祖师爷已出关。可阅残卷、瞻仰绝技。'}</div>` : ""}
-          ${!d.flags?.locked && !isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
+          ${!d.flags?.locked && !isMaster && !d.flags?.wounded ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">好感 <b style="color:var(--candle);font-family:Ma Shan Zheng;font-size:13px">${Interact.getBond(d.id)}</b> · ${Interact.stage(Interact.getBond(d.id)).name}</div>` : ""}
           ${d.flags?.locked && d.unlockHint && !isMaster ? `<div style="margin-top:10px;font-size:11px;color:var(--ink-3);letter-spacing:.06em">解 锁 提 示 · ${d.unlockHint}</div>` : ""}
         </div>
       </div>
@@ -155,6 +158,8 @@ const Disciples = (() => {
     const gb = document.getElementById("btn-gift"); if(gb) gb.onclick = () => Items.openGiftPicker(d.id);
     const cj = document.getElementById("btn-canjuan");
     if(cj && typeof Canjuan !== 'undefined') cj.onclick = () => Canjuan.open();
+    const hb = document.getElementById("btn-heal");
+    if(hb) hb.onclick = () => healWound(d);
     // 武器卡点击 → 武器库换装（祖师爷除外）
     const wc = document.getElementById("dd-weapon-cell");
     if(wc && !isMaster) wc.onclick = () => { if(typeof Items !== 'undefined') Items.openWeaponPicker(d.id); };
@@ -209,6 +214,24 @@ const Disciples = (() => {
     if(typeof Tasks !== 'undefined') Tasks.counter('cultivateCount', 1);
     Save.persist();
     Main.updateHUD();
+    openDetail(d.id);
+  }
+
+  // —— 重伤治疗 ——
+  function healWound(d){
+    const inv = G.state.inv || {};
+    if(!inv.pill_huiyuan || inv.pill_huiyuan < 1){
+      toast("缺 1 颗回元丹（落霞谷或丹房产）", "bad");
+      return;
+    }
+    inv.pill_huiyuan--;
+    d.flags = d.flags || {};
+    d.flags.wounded = false;
+    d.flags.woundDays = 0;
+    Save.persist();
+    SFX.play("chime");
+    toast(`${d.name} 服下回元丹，伤势已愈`, "good");
+    if(typeof Main !== 'undefined') Main.updateHUD();
     openDetail(d.id);
   }
 

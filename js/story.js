@@ -227,6 +227,11 @@ const Story = (() => {
     if(r.pill) G.state.pill = (G.state.pill||0) + r.pill;
     if(r.scroll) G.state.scroll = (G.state.scroll||0) + r.scroll;
     if(r.unlock) G.state.flags[`unlocked_${r.unlock}`] = true;
+    // —— 重伤标记：陈渊 c1s2 之后挂彩，需要药品治疗 ——
+    if(r.woundChenyuan){
+      const cy = G.state.disciples.find(d => d.id === "chenyuan");
+      if(cy){ cy.flags = cy.flags || {}; cy.flags.wounded = true; cy.flags.woundDays = 0; }
+    }
     if(r.heimoMood) {
       const h = G.state.disciples.find(d => d.id==="heimo");
       if(h && r.heimoMood>0){ h.flags.locked = false; h.flags.hidden = false; }
