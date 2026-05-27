@@ -272,6 +272,11 @@ const Main = (() => {
       else if(a==="build"){ showScreen("screen-build"); Build.render(); }
       else if(a==="story"){ showScreen("screen-story"); Story.renderList(); }
       else if(a==="battle-hub"){ if(!G.state) return; if(typeof Battle!=='undefined') Battle.openHub(); }
+      else if(a==="self-cultivate"){
+        if(!G.state) return;
+        // 掌门自修 = 打开陈渊详情面板（含闭关/突破/换武器/技能树）
+        if(typeof Disciples!=='undefined') Disciples.openDetail("chenyuan");
+      }
       else if(a==="codex"){ showScreen("screen-codex"); Codex.refresh(); }
       else if(a==="next-day") endDay();
     });

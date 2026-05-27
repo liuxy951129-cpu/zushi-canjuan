@@ -21,14 +21,18 @@ const Battle = (() => {
       return `
       <div class="battle-sect-card" data-sid="${sid}" style="border-color:${sect.color}">
         <div class="bsc-banner" style="background:linear-gradient(135deg,${sect.color}66,${sect.color}22)">
-          <div class="bsc-name">${sect.name}</div>
-          <div class="bsc-leader">掌门 · ${leader.name}（${realmText(leader.realm)}）</div>
+          <div class="bsc-icon" style="background-image:url(assets/icons/${sid}.png)"></div>
+          <div class="bsc-banner-text">
+            <div class="bsc-name">${sect.name}</div>
+            <div class="bsc-leader">掌门 · ${leader.name}（${realmText(leader.realm)}）</div>
+          </div>
         </div>
         <div class="bsc-body">
           <div class="bsc-stat"><span>实力评定</span><b style="color:${dangerColor}">${realmText(leader.realm)} ${"★".repeat(Math.min(5,leader.realm))}</b></div>
           <div class="bsc-stat"><span>门下高手</span><b>${sect.members.length} 人</b></div>
           <div class="bsc-stat"><span>本派战绩</span><b style="color:${winColor}">${winText}</b></div>
           <div class="bsc-actions">
+            <button class="btn small ghost" data-act-battle="roster" data-sid="${sid}">查 看 名 录</button>
             <button class="btn small primary" data-act-battle="prep" data-sid="${sid}">入 阵 论 道</button>
           </div>
         </div>
@@ -47,6 +51,54 @@ const Battle = (() => {
     document.querySelectorAll("[data-act-battle=\"prep\"]").forEach(b=>{
       b.onclick = () => openPrep(b.dataset.sid);
     });
+    document.querySelectorAll("[data-act-battle=\"roster\"]").forEach(b=>{
+      b.onclick = () => openRoster(b.dataset.sid);
+    });
+  }
+
+  // —— 敌方人员名录（头像/姓名/身份/阶段/战力）——
+  function calcPower(unit){
+    const ds = deriveBattleStats(unit);
+    return Math.round(ds.maxHp + ds.maxMp*1.5 + ds.atk*5 + ds.mag*5 + ds.def*3 + ds.mdef*3 + ds.spd*4);
+  }
+  function openRoster(sid){
+    const sect = ENEMY_SECTS[sid];
+    const rows = sect.members.map(m=>{
+      const role = m.isLeader ? `<span class="rost-role leader">★ 帮主</span>` :
+                   m.title ? `<span class="rost-role">${m.title}</span>` :
+                   `<span class="rost-role">长老</span>`;
+      const power = calcPower(m);
+      const powerColor = power>=2400?"#ff5050":power>=1600?"#ffc864":"#80c898";
+      return `
+        <div class="rost-row${m.isLeader?' leader':''}">
+          <img class="rost-avatar" src="assets/portraits/${m.portrait}.jpg" />
+          <div class="rost-name">${m.name}</div>
+          <div class="rost-cell">${role}</div>
+          <div class="rost-cell"><span class="rost-realm">${realmText(m.realm)}</span></div>
+          <div class="rost-cell"><b class="rost-power" style="color:${powerColor}">${power}</b><span class="rost-power-tag">战力</span></div>
+        </div>
+      `;
+    }).join("");
+    Modal.openHTML(`
+      <h3 style="margin:0;text-align:center">${sect.name} · 备 战 名 录</h3>
+      <div class="lead" style="font-size:12px;color:var(--ink-3);text-align:center;margin:6px 0 12px 0">
+        「点 入 阵 论 道 即 可 与 此 派 较 量。」
+      </div>
+      <div class="rost-head">
+        <span class="rost-avatar-h"></span>
+        <span class="rost-name-h">姓 名</span>
+        <span class="rost-cell">身 份</span>
+        <span class="rost-cell">阶 段</span>
+        <span class="rost-cell">战 力</span>
+      </div>
+      <div class="rost-list">${rows}</div>
+      <div class="modal-row" style="margin-top:14px;gap:8px;justify-content:flex-end">
+        <button class="btn ghost" data-act-battle="back">返 回</button>
+        <button class="btn primary" data-act-battle="prep-from-roster" data-sid="${sid}">入 阵 论 道 →</button>
+      </div>
+    `);
+    document.querySelector('[data-act-battle="back"]').onclick = ()=> openHub();
+    document.querySelector('[data-act-battle="prep-from-roster"]').onclick = ()=> openPrep(sid);
   }
 
   // —— 备战界面：选模式 + 选我方阵容 ——
@@ -70,11 +122,12 @@ const Battle = (() => {
 
     const ourList = ours.map(d=>{
       const sel = selected.includes(d.id);
+      const isMaster = d.id === "chenyuan";
       return `
-        <div class="our-row ${sel?'sel':''}" data-did="${d.id}">
+        <div class="our-row ${sel?'sel':''}${isMaster?' is-master':''}" data-did="${d.id}">
           <img src="assets/portraits/${d.pic}.jpg" />
           <div class="our-row-info">
-            <div class="our-row-name">${d.name} <span class="our-row-realm">${realmText(d.realm)}</span></div>
+            <div class="our-row-name">${d.name} ${isMaster?'<span class="our-master-tag">★ 掌门</span>':''} <span class="our-row-realm">${realmText(d.realm)}</span></div>
             <div class="our-row-bar">
               <div class="orb-tag">根 ${d.stats.root}</div>
               <div class="orb-tag">智 ${d.stats.wit}</div>

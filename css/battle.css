@@ -668,3 +668,116 @@
   letter-spacing:.1em;
   font-style:italic;
 }
+
+/* —— hub 卡 banner 加 sect icon —— */
+.bsc-banner{ display:flex; align-items:center; gap:10px; }
+.bsc-icon{
+  width:46px; height:46px;
+  background-size:cover; background-position:center;
+  border-radius:50%;
+  border:2px solid var(--gold);
+  box-shadow:0 0 12px rgba(0,0,0,.5), inset 0 0 6px rgba(0,0,0,.4);
+  flex-shrink:0;
+}
+.bsc-banner-text{ flex:1; min-width:0; }
+.bsc-actions{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
+
+/* —— 备战名录 —— */
+.rost-head, .rost-row{
+  display:grid;
+  grid-template-columns: 56px 1.4fr 1fr 1fr 1fr;
+  gap:10px;
+  align-items:center;
+  padding:8px 10px;
+}
+.rost-head{
+  background:rgba(20,15,12,.7);
+  border:1px solid var(--gold);
+  border-radius:5px 5px 0 0;
+  font-family:Ma Shan Zheng;
+  letter-spacing:.16em;
+  color:var(--gold-2);
+  font-size:13px;
+}
+.rost-list{
+  max-height:50vh; overflow-y:auto;
+  border:1px solid var(--line);
+  border-top:none;
+  border-radius:0 0 5px 5px;
+  background:rgba(0,0,0,.3);
+}
+.rost-row{
+  border-bottom:1px dotted var(--line);
+  transition:background .15s;
+}
+.rost-row:hover{ background:rgba(201,163,90,.06); }
+.rost-row.leader{ background:rgba(201,163,90,.08); border-left:3px solid var(--gold); }
+.rost-avatar{
+  width:50px; height:60px; object-fit:cover;
+  border:1px solid var(--line); border-radius:3px;
+}
+.rost-name{
+  font-family:Ma Shan Zheng;
+  color:var(--ink-1);
+  font-size:15px;
+  letter-spacing:.12em;
+}
+.rost-row.leader .rost-name{ color:var(--gold-2); }
+.rost-cell{ font-size:13px; color:var(--ink-2); }
+.rost-role{
+  display:inline-block;
+  padding:2px 8px;
+  background:rgba(20,15,12,.6);
+  border:1px solid var(--line);
+  border-radius:3px;
+  font-size:11px; color:var(--ink-3);
+  letter-spacing:.05em;
+}
+.rost-role.leader{
+  background:linear-gradient(135deg, var(--gold), var(--candle));
+  color:#1a1310;
+  border-color:var(--gold-2);
+}
+.rost-realm{
+  font-family:Ma Shan Zheng;
+  color:var(--candle);
+  font-size:14px;
+  letter-spacing:.12em;
+}
+.rost-power{
+  font-family:Ma Shan Zheng;
+  font-size:18px;
+  letter-spacing:.05em;
+}
+.rost-power-tag{
+  display:block;
+  font-size:9px;
+  color:var(--ink-3);
+  letter-spacing:.1em;
+  margin-top:-2px;
+}
+.rost-avatar-h{ visibility:hidden; }
+
+/* —— 我方掌门 tag —— */
+.our-master-tag{
+  display:inline-block;
+  margin-left:4px;
+  padding:1px 6px;
+  background:linear-gradient(135deg, var(--gold), var(--candle));
+  color:#1a1310;
+  font-size:9px;
+  border-radius:2px;
+  letter-spacing:.1em;
+}
+.our-row.is-master{ border-left:3px solid var(--gold); }
+
+/* 移动端 */
+@media (max-width: 600px){
+  .rost-head, .rost-row{ grid-template-columns: 44px 1fr 70px 70px 70px; gap:6px; padding:6px; }
+  .rost-avatar{ width:40px; height:50px; }
+  .rost-name{ font-size:12px; letter-spacing:.06em; }
+  .rost-cell{ font-size:11px; }
+  .rost-role{ font-size:9px; padding:1px 4px; }
+  .rost-realm{ font-size:11px; }
+  .rost-power{ font-size:14px; }
+}
